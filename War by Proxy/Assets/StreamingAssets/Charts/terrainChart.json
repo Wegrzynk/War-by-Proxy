@@ -1,0 +1,164 @@
+{ 
+  "terrainChartArray": [
+    {
+      "tilemapSprite": "Plains",
+      "defenceRating": 1,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 2,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Mountains",
+      "defenceRating": 4,
+      "movementPenaltyFoot": 2,
+      "movementPenaltyThreads": 0,
+      "movementPenaltyTires": 0,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Forest",
+      "defenceRating": 2,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 2,
+      "movementPenaltyTires": 3,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "River",
+      "defenceRating": 0,
+      "movementPenaltyFoot": 2,
+      "movementPenaltyThreads": 0,
+      "movementPenaltyTires": 0,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Road",
+      "defenceRating": 0,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Sea",
+      "defenceRating": 0,
+      "movementPenaltyFoot": 0,
+      "movementPenaltyThreads": 0,
+      "movementPenaltyTires": 0,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 1,
+      "movementPenaltyLander": 1
+    },
+    {
+      "tilemapSprite": "Shore",
+      "defenceRating": 0,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 1
+    },
+    {
+      "tilemapSprite": "Reef",
+      "defenceRating": 1,
+      "movementPenaltyFoot": 0,
+      "movementPenaltyThreads": 0,
+      "movementPenaltyTires": 0,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 2,
+      "movementPenaltyLander": 2
+    },
+    {
+      "tilemapSprite": "City",
+      "defenceRating": 3,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "MilitaryBase",
+      "defenceRating": 3,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Airport",
+      "defenceRating": 3,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Port",
+      "defenceRating": 3,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 1,
+      "movementPenaltyLander": 1
+    },
+    {
+      "tilemapSprite": "HQ",
+      "defenceRating": 4,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Radio",
+      "defenceRating": 3,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Lab",
+      "defenceRating": 3,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    },
+    {
+      "tilemapSprite": "Outpost",
+      "defenceRating": 3,
+      "movementPenaltyFoot": 1,
+      "movementPenaltyThreads": 1,
+      "movementPenaltyTires": 1,
+      "movementPenaltyAir": 1,
+      "movementPenaltyShip": 0,
+      "movementPenaltyLander": 0
+    }
+  ]
+}

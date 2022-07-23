@@ -1,0 +1,124 @@
+{
+    "UnitSaveObjectArray": [
+        {
+            "unitType": 19,
+            "health": 100,
+            "team": 1,
+            "x": 1,
+            "z": 6,
+            "ammo": 9,
+            "fuel": 70,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 16,
+            "health": 100,
+            "team": 1,
+            "x": 3,
+            "z": 4,
+            "ammo": 6,
+            "fuel": 50,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 15,
+            "health": 100,
+            "team": 1,
+            "x": 5,
+            "z": 8,
+            "ammo": 9,
+            "fuel": 80,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 9,
+            "health": 100,
+            "team": 1,
+            "x": 6,
+            "z": 4,
+            "ammo": 9,
+            "fuel": 99,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 9,
+            "health": 100,
+            "team": 1,
+            "x": 6,
+            "z": 6,
+            "ammo": 9,
+            "fuel": 99,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 1,
+            "health": 100,
+            "team": 1,
+            "x": 5,
+            "z": 7,
+            "ammo": 0,
+            "fuel": 70,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 9,
+            "health": 100,
+            "team": 2,
+            "x": 9,
+            "z": 4,
+            "ammo": 9,
+            "fuel": 99,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 9,
+            "health": 100,
+            "team": 2,
+            "x": 9,
+            "z": 6,
+            "ammo": 9,
+            "fuel": 99,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 15,
+            "health": 100,
+            "team": 2,
+            "x": 10,
+            "z": 8,
+            "ammo": 9,
+            "fuel": 80,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 16,
+            "health": 100,
+            "team": 2,
+            "x": 12,
+            "z": 4,
+            "ammo": 6,
+            "fuel": 50,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 19,
+            "health": 100,
+            "team": 2,
+            "x": 14,
+            "z": 6,
+            "ammo": 9,
+            "fuel": 70,
+            "upgradeCounter": 0
+        },
+        {
+            "unitType": 1,
+            "health": 100,
+            "team": 2,
+            "x": 10,
+            "z": 7,
+            "ammo": 0,
+            "fuel": 70,
+            "upgradeCounter": 0
+        }
+    ]
+}
