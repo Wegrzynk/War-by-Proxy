@@ -71,91 +71,6 @@ public class TilemapObject
         this.movementPenaltyShip = tilemapSpriteValues.movementPenaltyShip;
         this.movementPenaltyLander = tilemapSpriteValues.movementPenaltyLander;
         this.defenceRating = tilemapSpriteValues.defenceRating;
-        /*switch((int)tilemapSprite)
-        {
-            case 0:
-                this.movementPenaltyFoot = 1;
-                this.movementPenaltyTires = 1;
-                this.movementPenaltyThreads = 1;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 0;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 0;
-                break;
-            case 1:
-                this.movementPenaltyFoot = 1;
-                this.movementPenaltyTires = 2;
-                this.movementPenaltyThreads = 1;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 0;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 1;
-                break;
-            case 2:
-                this.movementPenaltyFoot = 1;
-                this.movementPenaltyTires = 3;
-                this.movementPenaltyThreads = 2;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 0;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 2;
-                break;
-            case 3:
-                this.movementPenaltyFoot = 2;
-                this.movementPenaltyTires = 10;
-                this.movementPenaltyThreads = 0;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 0;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 4;
-                break;
-            case 4:
-                this.movementPenaltyFoot = 0;
-                this.movementPenaltyTires = 0;
-                this.movementPenaltyThreads = 0;
-                this.movementPenaltyShip = 1;
-                this.movementPenaltyLander = 1;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 0;
-                break;
-            case 5:
-                this.movementPenaltyFoot = 1;
-                this.movementPenaltyTires = 1;
-                this.movementPenaltyThreads = 1;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 1;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 0;
-                break;
-            case 6:
-                this.movementPenaltyFoot = 1;
-                this.movementPenaltyTires = 1;
-                this.movementPenaltyThreads = 1;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 0;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 3;
-                break;
-            case 7:
-                this.movementPenaltyFoot = 1;
-                this.movementPenaltyTires = 1;
-                this.movementPenaltyThreads = 1;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 0;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 3;
-                break;
-            case 8:
-                this.movementPenaltyFoot = 1;
-                this.movementPenaltyTires = 1;
-                this.movementPenaltyThreads = 1;
-                this.movementPenaltyShip = 0;
-                this.movementPenaltyLander = 0;
-                this.movementPenaltyAir = 1;
-                this.defenceRating = 3;
-                break;
-
-        }*/
         grid.TriggerGenericGridChanged(x, z);
     }
 
@@ -261,7 +176,6 @@ public class TilemapObject
     public void Load(SaveObject saveObject)
     {
         this.SetTilemapSprite(saveObject.tilemapSprite);
-        //tilemapSprite = saveObject.tilemapSprite;
     }
 }
 
@@ -306,7 +220,6 @@ public class Building : TilemapObject
     public void SetTeam(int newTeam)
     {
         team = newTeam;
-        //SetTilemapSprite((TilemapSprite)(6+newTeam));
     }
 
     public int GetHealth()
@@ -343,11 +256,6 @@ public class Building : TilemapObject
             cost = 0
         };
     }
-
-    /*public override string ToString()
-    {
-        return "It's a Building: " + tilemapSprite.ToString();
-    }*/
 }
 
 [System.Serializable]
@@ -403,11 +311,6 @@ public class City : Building
             cost = 0
         };
     }
-
-    /*public override string ToString()
-    {
-        return "It's a City: " + tilemapSprite.ToString();
-    }*/
 }
 
 [System.Serializable]
@@ -443,16 +346,6 @@ public class MilitaryBase : Building
             health = health,
             cost = 0
         };
-    }
-
-    /*public override string ToString()
-    {
-        return "It's a MilitaryBase: " + tilemapSprite.ToString();
-    }*/
-
-    public void recruit()
-    {
-        
     }
 }
 
@@ -490,11 +383,6 @@ public class Airport : Building
             cost = 0
         };
     }
-
-    /*public override string ToString()
-    {
-        return "It's a Airport: " + tilemapSprite.ToString();
-    }*/
 }
 
 [System.Serializable]
@@ -530,11 +418,6 @@ public class Port : Building
             health = health,
             cost = 0
         };
-    }
-
-    public override string ToString()
-    {
-        return "It's a Port: " + tilemapSprite.ToString();
     }
 }
 
@@ -572,11 +455,6 @@ public class HQ : Building
             cost = 0
         };
     }
-
-    /*public override string ToString()
-    {
-        return "It's a HQ: " + tilemapSprite.ToString();
-    }*/
 }
 
 [System.Serializable]
@@ -615,11 +493,6 @@ public class Radio : City
             cost = cost
         };
     }
-
-    /*public override string ToString()
-    {
-        return "It's a Radio: " + tilemapSprite.ToString();
-    }*/
 }
 
 [System.Serializable]
@@ -658,11 +531,6 @@ public class Lab : City
             cost = cost
         };
     }
-
-    /*public override string ToString()
-    {
-        return "It's a Lab: " + tilemapSprite.ToString();
-    }*/
 }
 
 [System.Serializable]
@@ -701,9 +569,4 @@ public class Outpost : City
             cost = cost
         };
     }
-
-    /*public override string ToString()
-    {
-        return "It's a Outpost: " + tilemapSprite.ToString();
-    }*/
 }

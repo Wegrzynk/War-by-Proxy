@@ -26,12 +26,6 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
     public GameObject powersPanel;
     public GameObject PlayerPrefab;
 
-    /*public override void OnEnable()
-    {
-        base.OnEnable();
-        GetCurrentRoomPlayers();
-    }*/
-
     public IEnumerator Wait()
     {
         yield return new WaitForSeconds(this.gameObject.GetComponent<Animation>()["SwipeAway2"].length - 0.01f);
@@ -42,19 +36,9 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
     {
         Room room = PhotonNetwork.CurrentRoom;
         int[] letters = (int[])room.CustomProperties["Alliances"];
-        //string[] playerNames = (string[])room.CustomProperties["PlayerNames"];
-        //players = new string[room.MaxPlayers];
         teams = new char[room.MaxPlayers];
         for(int i = 0; i < room.MaxPlayers; i++)
         {
-            /*if(playerNames[i] != "")
-            {
-                players[i] = playerNames[i];
-            }
-            else
-            {
-                players[i] = "Empty Slot";
-            }*/
             teams[i] = System.Convert.ToChar(64 + letters[i]);
         }
     }
@@ -75,11 +59,6 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
         }
     }
 
-    /*public void SetRoom(MenuManager.Room newRoom)
-    {
-        room = newRoom;
-    }*/
-
     public string BoolToInfo(bool check)
     {
         if(check) return "On";
@@ -88,16 +67,6 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
 
     public void InformationDisplay()
     {
-        /*mapDisplay.GetComponent<Text>().text = room.roomMap;
-        resourcesPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = room.roomResources.ToString();
-        turnsLimitPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = room.roomTurnsLimit.ToString();
-        weatherPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = room.roomWeather;
-        texturesPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = room.roomTextures;
-        fogPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = BoolToInfo(room.roomFog);
-        dominationPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = BoolToInfo(room.roomDomination);
-        powersPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = BoolToInfo(room.roomPowers);*/
-
-        Debug.Log("Displaying Room Information");
         mapDisplay.GetComponent<Text>().text = PhotonNetwork.CurrentRoom.CustomProperties["Map"].ToString();
         resourcesPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["Resources"].ToString();
         turnsLimitPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["TurnsLimit"].ToString();
@@ -141,30 +110,18 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
 
     public override void OnMasterClientSwitched(Photon.Realtime.Player newMasterClient)
     {
-        //PhotonNetwork.LeaveRoom(true);
-        //QuitRoom(/*(int)PhotonNetwork.LocalPlayer.CustomProperties["Spot"]*/);
         this.gameObject.transform.Find("returnButton").GetComponent<Button>().onClick.Invoke();
     }
 
     public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
     {
         AddPlayerListing(newPlayer, (int)newPlayer.CustomProperties["Index"]);
-        /*string[] newPlayerNames = (string[])PhotonNetwork.CurrentRoom.CustomProperties["PlayerNames"];
-        newPlayerNames[(int)newPlayer.CustomProperties["Index"]] = newPlayer.NickName;
-        ExitGames.Client.Photon.Hashtable changedProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-        changedProperties["PlayerNames"] = newPlayerNames;
-        PhotonNetwork.CurrentRoom.SetCustomProperties(changedProperties);*/
         Refresh();
     }
 
     public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
         listings[(int)otherPlayer.CustomProperties["Index"]] = null;
-        /*string[] newPlayerNames = (string[])PhotonNetwork.CurrentRoom.CustomProperties["PlayerNames"];
-        newPlayerNames[(int)otherPlayer.CustomProperties["Index"]] = "";
-        ExitGames.Client.Photon.Hashtable changedProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-        changedProperties["PlayerNames"] = newPlayerNames;
-        PhotonNetwork.CurrentRoom.SetCustomProperties(changedProperties);*/
         Refresh();
     }
 
@@ -188,10 +145,9 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
 
     private void AddPlayerListing(Photon.Realtime.Player player, int index)
     {
-        //int index = listings.FindIndex(x => x.UserId == player.UserId);
         if (listings[index] != null)
         {
-            Debug.Log("Player is already in the room");
+            Debug.LogError("Player is already in the room");
         }
         else
         {
@@ -202,10 +158,7 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
     public void QuitRoom()
     {
         StartCoroutine(this.gameObject.GetComponent<WaitingRoomWindow>().Wait());
-        //this.gameObject.GetComponent<WaitingRoomWindow>().room.InsertPlayer(index, null);
         PhotonNetwork.LeaveRoom(true);
-        Debug.Log("Did i leave the room?");
         this.Reset();
-        //this.gameObject.transform.Find("returnButton").GetComponent<Button>().onClick.RemoveListener(() => QuitRoom());
     }
 }

@@ -179,7 +179,7 @@ public class GameGUI : MonoBehaviourPunCallbacks
 
     public void ShowActionInfo(bool move, bool attack, bool capture, bool supply, bool load, bool[] unloadlist, bool upgrade, int x, int z)
     {
-        Testing helper = mainscriptholder.GetComponent<Testing>();
+        GameManager helper = mainscriptholder.GetComponent<GameManager>();
         if(move)
         {
             GameObject moveaction = Instantiate(actionoptionprefab, actionmenu.transform);
@@ -241,10 +241,9 @@ public class GameGUI : MonoBehaviourPunCallbacks
 
     public void ShowMatchOverview(Material[] colours)
     {
-        List<Player> playersinmatch = new List<Player>(mainscriptholder.GetComponent<Testing>().playersInMatch);
+        List<Player> playersinmatch = new List<Player>(mainscriptholder.GetComponent<GameManager>().playersInMatch);
         foreach(Player playerinfo in playersinmatch)
         {
-            Debug.Log("Colour index: " + playerinfo.GetTeam());
             GameObject matchplayer = Instantiate(matchoverviewprefab, matchoverview.transform.Find("OverviewPlayersList").Find("ScrollView").Find("Viewport").Find("Content"));
             matchplayer.transform.Find("PlayerColor").GetComponent<Image>().color = colours[playerinfo.GetTeam()].color;
             matchplayer.transform.Find("PlayerName").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.PlayerList[playerinfo.GetTeam()-1].NickName;
@@ -299,7 +298,7 @@ public class GameGUI : MonoBehaviourPunCallbacks
             item.SetUnitVisual(item.unitVisualPrefab);
             buyableUnit.transform.Find("UnitName").GetComponent<TextMeshProUGUI>().text = item.ToString();
             buyableUnit.transform.Find("UnitPrice").GetComponent<TextMeshProUGUI>().text = item.GetCost().ToString();
-            mainscriptholder.GetComponent<Testing>().AddRecruitListeners(buyableUnit, item, x, z, team);
+            mainscriptholder.GetComponent<GameManager>().AddRecruitListeners(buyableUnit, item, x, z, team);
         }
         recruitmenu.SetActive(true);
     }
@@ -317,13 +316,12 @@ public class GameGUI : MonoBehaviourPunCallbacks
     {
         foreach(City item in array)
         {
-            Debug.Log("item initialization attempt");
             GameObject buyableBuilding = Instantiate(recruitoptionprefab, buildingupgrademenu.transform.Find("BuildingShop").Find("ScrollView").Find("Viewport").Find("Content"));
             //item.SetUnitType(item.GetUnitType(), team);
             item.setTileVisual(item.tileVisualPrefab);
             buyableBuilding.transform.Find("UnitName").GetComponent<TextMeshProUGUI>().text = item.ToString();
             buyableBuilding.transform.Find("UnitPrice").GetComponent<TextMeshProUGUI>().text = item.GetCost().ToString();
-            mainscriptholder.GetComponent<Testing>().AddBuildingListeners(buyableBuilding, item, x, z, tile, team);
+            mainscriptholder.GetComponent<GameManager>().AddBuildingListeners(buyableBuilding, item, x, z, tile, team);
         }
         buildingupgrademenu.SetActive(true);
     }

@@ -114,10 +114,8 @@ public class JSONHandler
         if (!isInit)
         {
             isInit = true;
-            // Sprawdzenie czy istnieje folder zapis�w
             if (!Directory.Exists(SAVE_FOLDER))
             {
-                // Utworzenie folderu zapis�w
                 Directory.CreateDirectory(SAVE_FOLDER);
             }
         }
@@ -132,10 +130,8 @@ public class JSONHandler
 
             string jsonstring = File.ReadAllText(SAVE_FOLDER + fileName + "." + SAVE_EXTENSION);
             DamageMatrixArray arrayInstance = JsonUtility.FromJson<DamageMatrixArray>(jsonstring);
-            //Debug.Log(arrayInstance.damageChartArray);
             foreach(DamageMatrix attacking in arrayInstance.damageChartArray)
             {
-                //Debug.Log("Applying damage for unit type #" + (int)System.Enum.Parse(typeof(Unit.UnitType), attacking.Attacker));
                 convertedMatrix[(int)System.Enum.Parse(typeof(Unit.UnitType), attacking.Attacker), 0] = attacking.AATank;
                 convertedMatrix[(int)System.Enum.Parse(typeof(Unit.UnitType), attacking.Attacker), 1] = attacking.APC;
                 convertedMatrix[(int)System.Enum.Parse(typeof(Unit.UnitType), attacking.Attacker), 2] = attacking.Artillery;
@@ -172,7 +168,6 @@ public class JSONHandler
         {
             string jsonstring = File.ReadAllText(SAVE_FOLDER + fileName + "." + SAVE_EXTENSION);
             UnitArrayArray arrayInstance = JsonUtility.FromJson<UnitArrayArray>(jsonstring);
-            //Debug.Log(arrayInstance.unitChartArray);
             
             return arrayInstance.unitChartArray[(int)typeSet];
         }
@@ -189,7 +184,6 @@ public class JSONHandler
         {
             string jsonstring = File.ReadAllText(SAVE_FOLDER + fileName + "." + SAVE_EXTENSION);
             TerrainArrayArray arrayInstance = JsonUtility.FromJson<TerrainArrayArray>(jsonstring);
-            //Debug.Log(arrayInstance.terrainChartArray);
             
             return arrayInstance.terrainChartArray[(int)typeSet];
         }

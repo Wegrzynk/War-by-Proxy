@@ -67,7 +67,6 @@ public class PlayersEditorWindow : MonoBehaviour
 
     public void MoveRight(int index)
     {
-        Debug.Log(index);
         if(playerIndexes[index] == 8)
         {
             playerIndexes[index] = 0;

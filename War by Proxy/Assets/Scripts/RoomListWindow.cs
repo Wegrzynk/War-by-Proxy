@@ -10,7 +10,6 @@ using Photon.Realtime;
 public class RoomListWindow : MonoBehaviourPunCallbacks
 {
     private List<MenuManager.Room> onlineRooms = new List<MenuManager.Room>();
-    //private List<RoomInfo> listings = new List<RoomInfo>();
     private List<Player> players = new List<Player>();
     List<Color> playerColors = new List<Color>{ Color.red, Color.blue, Color.green, Color.yellow };
     private int counter = 1;
@@ -25,11 +24,9 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
     {
         this.gameObject.GetComponent<Animation>().Play("SwipeAway");
         yield return new WaitForSeconds(this.gameObject.GetComponent<Animation>()["SwipeAway"].length);
-        //this.gameObject.SetActive(false);
         waitingRoomWindow.SetActive(true);
         waitingRoomWindow.GetComponent<WaitingRoomWindow>().Init();
         waitingRoomWindow.transform.Find("confirmButton").gameObject.SetActive(false);
-        //waitingRoomWindow.transform.Find("returnButton").GetComponent<Button>().onClick.AddListener(() => waitingRoomWindow.GetComponent<WaitingRoomWindow>().QuitRoom());
         waitingRoomWindow.GetComponent<Animation>().Play("SwipeIn");
         this.gameObject.SetActive(false);
     }
@@ -38,49 +35,6 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
     {
         yield return new WaitForSeconds(waitingRoomWindow.GetComponent<Animation>()["SwipeAway2"].length);
     }
-
-
-    /*public void InitRoomsList()
-    {
-        foreach(MenuManager.Room room in onlineRooms)
-        {
-            GameObject roomInstance = Instantiate(roomPrefab, roomsListContent.transform);
-            PlayersDisplay(roomInstance, room);
-            InformationDisplay(roomInstance, room);
-            roomInstance.transform.Find("RoomName").Find("RoomNameText").GetComponent<TextMeshProUGUI>().text = "Room #" + counter + ": Standard on " + room.roomMap;
-            counter++;
-        }
-    }*/
-
-    /*public override void OnRoomListUpdate(List<RoomInfo> roomList)
-    {
-        Debug.Log("There was an update on rooms list");
-        foreach (RoomInfo info in roomList)
-        {
-            if (info.RemovedFromList)
-            {
-                int index = listings.FindIndex( x => x.Name == info.Name);
-                if (index != -1)
-                {
-                    Destroy(GameObject.Find(info.Name));
-                    listings.RemoveAt(index);
-                }
-            }
-            else
-            {
-                int index = listings.FindIndex(x => x.Name == info.Name);
-                if(index == -1)
-                {
-                    GameObject listing = Instantiate(roomPrefab, roomsListContent.transform);
-                    if (listing != null)
-                    {
-                        //listing.SetRoomInfo(info);
-                        listings.Add(info);
-                    }
-                }
-            }
-        }
-    }*/
 
     public void ClearList()
     {
@@ -92,10 +46,8 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
 
     public void InitRoomsList()
     {
-        Debug.Log("Starting init. " + menuManager.GetComponent<MenuManager>().listings.Count);
         foreach(RoomInfo room in menuManager.GetComponent<MenuManager>().listings)
         {
-            Debug.Log("Testing if room exists");
             GameObject roomInstance = Instantiate(roomPrefab, roomsListContent.transform);
             roomInstance.name = room.Name;
             InformationDisplay(roomInstance, room);
@@ -142,15 +94,7 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
     public void PlayersDisplay(GameObject roomInstance, RoomInfo room)
     {
         int[] letters = (int[])room.CustomProperties["Alliances"];
-        for (int i = 0; i < room.MaxPlayers; i++)
-        {
-            Debug.Log(letters[i]);
-        }
         string[] playerNames = (string[])room.CustomProperties["PlayerNames"];
-        for (int i = 0; i < room.MaxPlayers; i++)
-        {
-            Debug.Log(playerNames[i]);
-        }
         
         for(int i = 0; i < room.MaxPlayers; i++)
         {
@@ -182,9 +126,6 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
         myCustomProperties["Index"] = index;
         PhotonNetwork.SetPlayerCustomProperties(myCustomProperties);
         PhotonNetwork.JoinRoom(room.Name);
-        //room.InsertPlayer(index, "Me");
-        //waitingRoomWindow.GetComponent<WaitingRoomWindow>().SetRoom(room);
-        //StartCoroutine(Hold1(index));
     }
 
     public override void OnJoinedRoom()

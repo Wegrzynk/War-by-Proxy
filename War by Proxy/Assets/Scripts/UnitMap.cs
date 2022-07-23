@@ -59,13 +59,10 @@ public class Unitmap
         {
             for(int j=counter; j>=-counter; j--)
             {
-                //Debug.Log("Testing if: " + i + " is larger or equal to 2 and " + j + " is larger or equal to 2");
                 if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
                 {
-                    //Debug.Log("Testing for position: " + (x+i) + "," + (z+j));
                     if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() != grid.GetGridObject(x, z).GetTeam())
                     {
-                        //Debug.Log("Enemy found. Adding to the list.");
                         targetableUnits.Add(grid.GetGridObject(x+i, z+j));
                     }
                 }
@@ -94,13 +91,10 @@ public class Unitmap
         {
             for(int j=counter; j>=-counter; j--)
             {
-                //Debug.Log("Testing if: " + i + " is larger or equal to 2 and " + j + " is larger or equal to 2");
                 if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
                 {
-                    //Debug.Log("Testing for position: " + (x+i) + "," + (z+j));
                     if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() == grid.GetGridObject(x, z).GetTeam())
                     {
-                        //Debug.Log("Enemy found. Adding to the list.");
                         targetableUnits.Add(grid.GetGridObject(x+i, z+j));
                     }
                 }
@@ -120,12 +114,9 @@ public class Unitmap
 
     public bool AttackUnit(Unit attacker, Unit defender, int[,] damageMatrix, int defenceRating)
     {
-        Debug.Log("Base Damage: " + damageMatrix[attacker.GetIntFromUnit(),defender.GetIntFromUnit()]);
         int damageFormula = Mathf.RoundToInt(damageMatrix[attacker.GetIntFromUnit(),defender.GetIntFromUnit()] * (1 + (float)attacker.GetUpgradeCounter() / 10) * ((float)attacker.GetHealth() / 100) * ((float)(1000 - (defenceRating * defender.GetHealth())) / 1000));
-        Debug.Log("Damage Formula: " + damageFormula);
 
         bool isDead = defender.TakeDamage(damageFormula);
-        Debug.Log("Enemy damaged. Current enemy health: " + defender.GetHealth());
         return isDead;
     }
 
@@ -207,9 +198,6 @@ public class Unitmap
             grid.SetGridObject(UnitSaveObject.x, UnitSaveObject.z, new Unit(grid, UnitSaveObject.x, UnitSaveObject.z));
             grid.GetGridObject(UnitSaveObject.x, UnitSaveObject.z).SetUnitType(UnitSaveObject.unitType, UnitSaveObject.team, UnitSaveObject.ammo, UnitSaveObject.fuel, UnitSaveObject.loadedUnits, UnitSaveObject.upgradeCounter);
             grid.TriggerGenericGridChanged(UnitSaveObject.x, UnitSaveObject.z);
-            /*Unit Unit = grid.GetGridObject(UnitSaveObject.x, UnitSaveObject.z);
-            Unit.Load(UnitSaveObject);
-            grid.TriggerGenericGridChanged(UnitSaveObject.x, UnitSaveObject.z);*/
         }
         OnLoaded?.Invoke(this, EventArgs.Empty);
     }

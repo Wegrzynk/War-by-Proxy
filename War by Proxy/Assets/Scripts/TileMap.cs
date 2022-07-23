@@ -32,7 +32,6 @@ public class Tilemap
         if (tilemapObject != null)
         {
             tilemapObject.SetTilemapSprite(tilemapSprite);
-            //Debug.Log(grid.GetGridObject(worldPosition));
         }
     }
 
@@ -54,7 +53,6 @@ public class Tilemap
         if (tilemapObject != null)
         {
             tilemapObject.SetTilemapSprite((TilemapObject.TilemapSprite)spriteInt);
-            //Debug.Log(grid.GetGridObject(worldPosition));
         }
     }
 
@@ -69,13 +67,10 @@ public class Tilemap
         {
             for(int j=counter; j>=-counter; j--)
             {
-                //Debug.Log("Testing if: " + i + " is larger or equal to 2 and " + j + " is larger or equal to 2");
                 if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
                 {
-                    //Debug.Log("Testing for position: " + (x+i) + "," + (z+j));
                     if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetMovementPenaltyType(checker) != 0 && unitmap.GetGrid().GetGridObject(x+i, z+j) == null)
                     {
-                        //Debug.Log("Enemy found. Adding to the list.");
                         neighbourtiles.Add(grid.GetGridObject(x+i, z+j));
                     }
                 }
@@ -165,7 +160,6 @@ public class Tilemap
         }
 
         SaveObject saveObject = new SaveObject { tilemapObjectSaveObjectArray = tilemapObjectSaveObjectList.ToArray() };
-        Debug.Log(saveObject.tilemapObjectSaveObjectArray[0].ToString());
 
         SaveSystem saveSystem = new SaveSystem();
         saveSystem.SaveObject(filename, saveObject, true, false);
@@ -173,21 +167,8 @@ public class Tilemap
 
     public void Load(string filename)
     {
-        /*SaveObject saveObject = SaveSystem.LoadObject<SaveObject>(filename);
-        Debug.Log(saveObject.tilemapObjectSaveObjectArray.Length);
-        Debug.Log(saveObject.tilemapObjectSaveObjectArray[7]);
-        foreach (var tilemapObjectSaveObject in saveObject.tilemapObjectSaveObjectArray)
-        {
-            Debug.Log(tilemapObjectSaveObject.ToString());
-            TilemapObject tilemapObject = grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z);
-            tilemapObject.Load(tilemapObjectSaveObject);
-            grid.TriggerGenericGridChanged(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z);
-        }
-        OnLoaded?.Invoke(this, EventArgs.Empty);*/
-
         SaveSystem saveSystem = new SaveSystem();
         SaveObject saveObject = saveSystem.LoadObject<SaveObject>(filename);
-        Debug.LogError(saveObject.ToString());
         foreach (TilemapObject.SaveObject tilemapObjectSaveObject in saveObject.tilemapObjectSaveObjectArray)
         {
             switch(tilemapObjectSaveObject.type)

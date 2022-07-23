@@ -247,7 +247,6 @@ public class MenuManager : MonoBehaviourPunCallbacks
         );
         if(online)
         {
-            //waitingRoomWindow.GetComponent<WaitingRoomWindow>().SetRoom(newRoom);
             if (!PhotonNetwork.IsConnected)
             {
                 return;
@@ -264,10 +263,8 @@ public class MenuManager : MonoBehaviourPunCallbacks
             myCustomProperties["Fog"] = newRoom.roomFog;
             myCustomProperties["Domination"] = newRoom.roomDomination;
             myCustomProperties["Powers"] = newRoom.roomPowers;
-            Debug.Log("It works until here");
             myCustomProperties["Alliances"] = newRoom.alliances;
             myCustomProperties["PlayerNames"] = newRoom.players;
-            Debug.Log("Will it work here?");
             options.BroadcastPropsChangeToAll = true;
             options.MaxPlayers = 2;
             options.IsVisible = true;
@@ -285,7 +282,6 @@ public class MenuManager : MonoBehaviourPunCallbacks
                 "Alliances",
                 "PlayerNames",
             };
-            Debug.Log("Perhaps it still works here?");
             PhotonNetwork.CreateRoom(newRoom.roomMap + value.ToString(), options, TypedLobby.Default);
         }
     }
@@ -299,7 +295,7 @@ public class MenuManager : MonoBehaviourPunCallbacks
 
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
-        Debug.Log("Room creation failed. " + message);
+        Debug.LogError("Room creation failed. " + message);
     }
 
     public override void OnJoinedLobby()
@@ -309,7 +305,6 @@ public class MenuManager : MonoBehaviourPunCallbacks
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        Debug.Log("There was an update on rooms list");
         foreach (RoomInfo info in roomList)
         {
             if (info.RemovedFromList || info.MaxPlayers == info.PlayerCount)

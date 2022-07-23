@@ -104,7 +104,6 @@ public class PathFinding
             }
         }
 
-        // Out of nodes on the openList
         return null;
     }
 

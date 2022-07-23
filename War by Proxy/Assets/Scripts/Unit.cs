@@ -118,7 +118,6 @@ public class Unit
         this.loadedUnits = new Unit[unitTypeValues.loadCapacity];
         this.upgradeCounter = 0;
         this.team = team;
-        //grid.TriggerGenericGridChanged(x, z);
     }
 
     public void SetUnitVisual(GameObject instance)
@@ -299,7 +298,6 @@ public class Unit
 
     public void VisualDeactivation()
     {
-        //Debug.Log("Deactivating unit " + unitVisual.name + " visually");
         foreach(Transform child in unitVisual.transform)
         {
             Color c = child.gameObject.GetComponent<Renderer>().material.color;
@@ -313,7 +311,6 @@ public class Unit
 
     public void VisualActivation()
     {
-        //Debug.Log("Activating unit " + unitVisual.name + " visually");
         foreach(Transform child in unitVisual.transform)
         {
             Color c = child.gameObject.GetComponent<Renderer>().material.color;

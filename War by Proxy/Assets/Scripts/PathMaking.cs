@@ -42,48 +42,38 @@ public class PathMaking
         
         while(unprocessedVertices.Count != 0)
         {
-            //Debug.Log("Test #" + counter + ", count of unprocessed vertices equals to " + unprocessedVertices.Count);
             int currentSmallest = int.MaxValue;
             int smallestNodeIndex = -1;
             for(int i = 0; i < graph.Count; i++)
             {
-                //Debug.Log("Checking if vertice " + graph[i].nodePosition() + " has smaller value and belongs to unprocessed vertices");
                 if(moveCost[i] < currentSmallest && unprocessedVertices.IndexOf(graph[i]) != -1)
                 {
-                    //Debug.Log("Checking smallest value for index #" + i);
                     currentSmallest = moveCost[i];
                     smallestNodeIndex = i;
-                    //Debug.Log("Index found!");
                 }
             }
-            //Debug.Log("Selected vertice of smallest value: " + graph[smallestNodeIndex].nodePosition());
             processedVertices.Add(graph[smallestNodeIndex]);
             unprocessedVertices.Remove(graph[smallestNodeIndex]);
             for(int i = 0; i < graph.Count; i++)
             {
                 if(unprocessedVertices.Contains(graph[i]) && graph[i].connectedFromNodes.IndexOf(graph[smallestNodeIndex]) != -1)
                 {
-                    //Debug.Log("Vertice " + graph[i].nodePosition() + " is connected to vertice " + graph[smallestNodeIndex].nodePosition());
-                    //Debug.Log("Is " + moveCost[i] + " larger than " + (moveCost[smallestNodeIndex] + graph[i].moveCost) + "?");
                     if(moveCost[i] > moveCost[smallestNodeIndex] + graph[i].moveCost){
                         moveCost[i] = moveCost[smallestNodeIndex] + graph[i].moveCost;
                         shortestPreviousNodes[i] = graph[smallestNodeIndex];
                     }
                 }
             }
-            //Debug.Log(printArray(moveCost));
         }
 
         for(int i = 0; i < moveCost.Length; i++)
         {
             if(moveCost[i] > unit.GetMovementDistance())
             {
-                //Debug.Log("Removing vertice " + graph[i].nodePosition() + " from walkable vertices");
                 processedVertices.Remove(graph[i]);
             }
         }
 
-        //Debug.Log(printArray(moveCost));
         return processedVertices;
     }
 
@@ -119,7 +109,6 @@ public class PathMaking
 
         for(int i = 0; i < givenMovementDistance; i++)
         {
-            //Debug.Log("Iteration #" + i);
             foreach(DijkstraNode checkerNode in checkerList)
             {
                 foreach(DijkstraNode neighbourNode in GetNeighbourList(checkerNode))
@@ -144,7 +133,6 @@ public class PathMaking
             checkerList.Clear();
             checkerList.AddRange(replacer);
             replacer.Clear();
-            //Debug.Log("checkerList has currently " + checkerList.Count + " elements");
         }
         foreach(DijkstraNode remaining in checkerList)
         {

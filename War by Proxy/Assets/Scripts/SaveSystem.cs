@@ -16,10 +16,8 @@ public class SaveSystem
         if (!isInit)
         {
             isInit = true;
-            // Sprawdzenie czy istnieje folder zapis�w
             if (!Directory.Exists(SAVE_FOLDER))
             {
-                // Utworzenie folderu zapis�w
                 Directory.CreateDirectory(SAVE_FOLDER);
             }
         }
@@ -37,7 +35,6 @@ public class SaveSystem
                 saveNumber++;
                 saveFileName = fileName + "_" + saveNumber;
             }
-            // Nazwa pliku zapisu jest zawsze unikalna
         }
         if(append)
         {
@@ -51,14 +48,12 @@ public class SaveSystem
     public string Load(string fileName)
     {
         Init();
-        Debug.LogError("Checking if " + SAVE_FOLDER + fileName + "." + SAVE_EXTENSION + " exists");
         if (File.Exists(SAVE_FOLDER + fileName + "." + SAVE_EXTENSION))
         {
             string saveString = File.ReadAllText(SAVE_FOLDER + fileName + "." + SAVE_EXTENSION);
             return saveString;
         } else
         {
-            Debug.LogError("File doesnt exist???");
             return null;
         }
     }
@@ -67,9 +62,7 @@ public class SaveSystem
     {
         Init();
         DirectoryInfo directoryInfo = new DirectoryInfo(SAVE_FOLDER);
-        // Pobranie wszystkich plik�w zapisu
         FileInfo[] saveFiles = directoryInfo.GetFiles("*." + SAVE_EXTENSION);
-        // Przej�cie przez wszystkie pliki zapisu, szukaj�c nadpisanego/zapisanego najp�niej
         FileInfo mostRecentFile = null;
         foreach (FileInfo fileInfo in saveFiles)
         {
@@ -85,7 +78,6 @@ public class SaveSystem
             }
         }
 
-        // Je�li istnieje plik zapisu, za�adowanie go. W przeciwnym wypadku zwr�cenie null.
         if (mostRecentFile != null)
         {
             string saveString = File.ReadAllText(mostRecentFile.FullName);
@@ -124,43 +116,15 @@ public class SaveSystem
 
     public TSaveObject LoadObject<TSaveObject>(string fileName)
     {
-        Debug.LogError("Attempting to run this bloody thing");
         Init();
         string saveString = Load(fileName);
         if (saveString != null)
         {
-            Debug.LogError("Saving the object");
             TSaveObject saveObject = JsonUtility.FromJson<TSaveObject>(saveString);
             return saveObject;
         } else
         {
-            Debug.LogError("Returning Default");
             return default(TSaveObject);
         }
     }
-
-    /*public static void ManualToJson(Tilemap.SaveObject saveObject, string filename)
-    {
-        Init();
-        string resultsJson = "";
-        resultsJson += "{\"tilemapObjectSaveObjectArray\":[";
-        Debug.Log(JsonUtility.ToJson((Building.SaveObject2)saveObject.tilemapObjectSaveObjectArray[0]));
-        for (int i = 0; i < saveObject.tilemapObjectSaveObjectArray.Length; i++)
-        {
-            if (saveObject.tilemapObjectSaveObjectArray[i].GetType() == typeof(Building))
-            {
-                resultsJson += JsonUtility.ToJson((Building.SaveObject2)saveObject.tilemapObjectSaveObjectArray[i]);
-            } 
-            else 
-            {
-                resultsJson += JsonUtility.ToJson(saveObject.tilemapObjectSaveObjectArray[i]);
-            }
-            if (i < saveObject.tilemapObjectSaveObjectArray.Length - 1)
-            {
-                resultsJson += ",";
-            }
-        }
-        resultsJson += "]}";
-        Save(filename, resultsJson, true, false);
-    }*/
 }

@@ -61,10 +61,6 @@ public class RoomEditorWindow : MonoBehaviour
             selectedIndex++;
         }
         StartCoroutine(ScrollLeft());
-        /*PrintModes();
-        PrintMaps(selectedIndex);
-        MapShow(maps[selectedIndex][0]);
-        ShowDescription(selectedIndex);*/
     }
 
     IEnumerator ScrollLeft()
@@ -88,11 +84,6 @@ public class RoomEditorWindow : MonoBehaviour
             selectedIndex--;
         }
         StartCoroutine(ScrollRight());
-        /*Debug.Log("This text should not be showing until after animation");
-        PrintModes();
-        PrintMaps(selectedIndex);
-        MapShow(maps[selectedIndex][0]);
-        ShowDescription(selectedIndex);*/
     }
 
     IEnumerator ScrollRight()
