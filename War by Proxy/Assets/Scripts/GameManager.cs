@@ -267,8 +267,6 @@ public class GameManager : MonoBehaviourPun
 
     public void ActionAttack(int x, int z)
     {
-        Debug.Log("Checking for data: " + x + ", " + z + ", " + graph[0].x + ", " + graph[0].z);
-        Debug.Log(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
         GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
         if(movableUnit)
         {
@@ -893,7 +891,6 @@ public class GameManager : MonoBehaviourPun
                         {
                             if((graph[0].x == x && graph[0].z == z) || unitmap.GetGrid().GetGridObject(x, z) == null)
                             {
-                                Debug.Log("Please don't tell me you're doing this two times in a row");
                                 unitmap.MoveUnit(graph[0].x, graph[0].z, x, z);
                                 bool actionmove = true;
                                 bool actionfire = false;
@@ -970,6 +967,7 @@ public class GameManager : MonoBehaviourPun
                     {
                         if(tile.gameObject.tag == "Selected" && localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ())))
                         {
+                            canvas.GetComponent<GameGUI>().HideAttackInfo();
                             bool isDead = (unitmap.AttackUnit(unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()), unitmap.GetGrid().GetGridObject(x, z), damageMatrix, tilemap.GetGrid().GetGridObject(x, z).GetDefence()));
                             unitSelected = "false";
                             foreach(GameObject selected in selectedTiles)
@@ -1224,6 +1222,19 @@ public class GameManager : MonoBehaviourPun
                 else
                 {
                     canvas.GetComponent<GameGUI>().HideUnitInfo();
+                }
+            }
+
+            if(unitSelected == "fire" && MouseClickDetector(ref x, ref z, ref tile) && menuUp == false)
+            {
+                if(tile.gameObject.tag == "Selected")
+                {
+                    unitmap.SimulateAttack(targetables[0], unitmap.GetGrid().GetGridObject(x, z), damageMatrix, tilemap.GetGrid().GetGridObject(x, z).GetDefence(), tilemap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()).GetDefence(), out int attack, out int counterattack);
+                    canvas.GetComponent<GameGUI>().ShowAttackInfo(Input.mousePosition, targetables[0].GetUnitInstance(), unitmap.GetGrid().GetGridObject(x, z).GetUnitInstance(), attack, counterattack);
+                }
+                else
+                {
+                    canvas.GetComponent<GameGUI>().HideAttackInfo();
                 }
             }
 

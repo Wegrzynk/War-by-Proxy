@@ -120,6 +120,12 @@ public class Unitmap
         return isDead;
     }
 
+    public void SimulateAttack(Unit attacker, Unit defender, int[,] damageMatrix, int defenderDefenceRating, int attackerDefenceRating, out int attackDamage, out int CounterattackDamage)
+    {
+        attackDamage = Mathf.RoundToInt(damageMatrix[attacker.GetIntFromUnit(),defender.GetIntFromUnit()] * (1 + (float)attacker.GetUpgradeCounter() / 10) * ((float)attacker.GetHealth() / 100) * ((float)(1000 - (defenderDefenceRating * defender.GetHealth())) / 1000));
+        CounterattackDamage = Mathf.RoundToInt(damageMatrix[defender.GetIntFromUnit(),attacker.GetIntFromUnit()] * (1 + (float)defender.GetUpgradeCounter() / 10) * (((float)defender.GetHealth() - attackDamage) / 100) * ((float)(1000 - (attackerDefenceRating * attacker.GetHealth())) / 1000));
+    }
+
     public void ClearGrid()
     {
         for (int x = 0; x < grid.GetWidth(); x++)

@@ -27,6 +27,7 @@ public class GameGUI : MonoBehaviourPunCallbacks
     public GameObject gameenddialog;
     public GameObject recruitmenu;
     public GameObject buildingupgrademenu;
+    public GameObject attackinfo;
 
     public GameObject actionoptionprefab;
     public GameObject recruitoptionprefab;
@@ -128,7 +129,7 @@ public class GameGUI : MonoBehaviourPunCallbacks
             tileinfo.transform.Find("NoUnitInfo").gameObject.SetActive(false);
             Texture2D unitthumbnail = RuntimePreviewGenerator.GenerateModelPreview(unitObject.transform);
             Transform unitinfo = tileinfo.transform.Find("UnitInfo");
-            unitinfo.Find("UI_Title").Find("Text").GetComponent<TextMeshProUGUI>().text = "Unit: " + unit.ToString() + "" + ShowLevel(unit);
+            unitinfo.Find("UI_Title").Find("Text").GetComponent<TextMeshProUGUI>().text = "Unit: " + unit.ToString() + " " + ShowLevel(unit);
             unitinfo.Find("UI_Icon").Find("Image").GetComponent<Image>().sprite = Sprite.Create(unitthumbnail, new Rect(0.0f, 0.0f, unitthumbnail.width, unitthumbnail.height), new Vector2(0.5f, 0.5f), 100f);
             unitinfo.Find("UI_Health").Find("Text").GetComponent<TextMeshProUGUI>().text = "Health: " + unit.GetHealth();
             unitinfo.Find("UI_Movement").Find("Text").GetComponent<TextMeshProUGUI>().text = "Movement: " + unit.GetStringFromMovementType() + " " + unit.GetMovementDistance();
@@ -333,6 +334,23 @@ public class GameGUI : MonoBehaviourPunCallbacks
             GameObject.Destroy(child.gameObject);
         }
         buildingupgrademenu.SetActive(false);
+    }
+
+    public void ShowAttackInfo(Vector3 pos, GameObject attackerUnit, GameObject defenderUnit, int simulatedAttack, int simulatedCounterattack)
+    {
+        Texture2D attackerthumbnail = RuntimePreviewGenerator.GenerateModelPreview(attackerUnit.transform);
+        Texture2D defenderthumbnail = RuntimePreviewGenerator.GenerateModelPreview(defenderUnit.transform);
+        attackinfo.transform.position = pos + new Vector3(0, -60, 0);
+        attackinfo.transform.Find("AttackerIcon").Find("Image").GetComponent<Image>().sprite = Sprite.Create(attackerthumbnail, new Rect(0.0f, 0.0f, attackerthumbnail.width, attackerthumbnail.height), new Vector2(0.5f, 0.5f), 100f);
+        attackinfo.transform.Find("DefenderIcon").Find("Image").GetComponent<Image>().sprite = Sprite.Create(defenderthumbnail, new Rect(0.0f, 0.0f, defenderthumbnail.width, defenderthumbnail.height), new Vector2(0.5f, 0.5f), 100f);
+        attackinfo.transform.Find("AttackDescription").Find("Text").GetComponent<TextMeshProUGUI>().text = "Attack: " + simulatedAttack + "%";
+        attackinfo.transform.Find("CounterattackDescription").Find("Text").GetComponent<TextMeshProUGUI>().text = "Counterattack: " + simulatedCounterattack + "%";
+        attackinfo.SetActive(true);
+    }
+
+    public void HideAttackInfo()
+    {
+        if(attackinfo.activeSelf) attackinfo.SetActive(false);
     }
 
     public string CheckIncome(TilemapObject tile)

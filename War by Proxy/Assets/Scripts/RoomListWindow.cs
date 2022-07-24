@@ -51,7 +51,7 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
             GameObject roomInstance = Instantiate(roomPrefab, roomsListContent.transform);
             roomInstance.name = room.Name;
             PlayersDisplay(roomInstance, room);
-            roomInstance.transform.Find("RoomName").Find("RoomNameText").GetComponent<TextMeshProUGUI>().text = "Room #" + counter + ": Standard on " + room.CustomProperties["Map"].ToString();
+            roomInstance.transform.Find("RoomName").Find("RoomNameText").GetComponent<TextMeshProUGUI>().text = "Room #" + counter + ": " + room.CustomProperties["MapName"].ToString();
             counter++;
         }
     }
