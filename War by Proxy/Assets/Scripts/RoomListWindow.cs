@@ -50,16 +50,10 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
         {
             GameObject roomInstance = Instantiate(roomPrefab, roomsListContent.transform);
             roomInstance.name = room.Name;
-            InformationDisplay(roomInstance, room);
             PlayersDisplay(roomInstance, room);
             roomInstance.transform.Find("RoomName").Find("RoomNameText").GetComponent<TextMeshProUGUI>().text = "Room #" + counter + ": Standard on " + room.CustomProperties["Map"].ToString();
             counter++;
         }
-    }
-
-    public void ProvideSampleRooms(List<MenuManager.Room> sampleList)
-    {
-        onlineRooms.AddRange(sampleList);
     }
 
     public void Reset()
@@ -70,25 +64,6 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
         }
         onlineRooms.Clear();
         counter = 1;
-    }
-
-    public string BoolToInfo(bool check)
-    {
-        if(check) return "On";
-        return "Off";
-    }
-
-    public void InformationDisplay(GameObject roomInstance, RoomInfo room)
-    {
-        Transform informationPanel = roomInstance.transform.Find("informationPanel");
-        roomInstance.transform.Find("mapDisplay").Find("mapDisplayName").GetComponent<Text>().text = room.CustomProperties["Map"].ToString();
-        informationPanel.Find("resourcesPanel").Find("value").GetComponent<TextMeshProUGUI>().text = room.CustomProperties["Resources"].ToString();
-        informationPanel.Find("turnsLimitPanel").Find("value").GetComponent<TextMeshProUGUI>().text = room.CustomProperties["TurnsLimit"].ToString();
-        informationPanel.Find("weatherPanel").Find("value").GetComponent<TextMeshProUGUI>().text = room.CustomProperties["Weather"].ToString();
-        informationPanel.Find("texturesPanel").Find("value").GetComponent<TextMeshProUGUI>().text = room.CustomProperties["LandTexture"].ToString();
-        informationPanel.Find("fogPanel").Find("value").GetComponent<TextMeshProUGUI>().text = room.CustomProperties["Fog"].ToString();
-        informationPanel.Find("dominationPanel").Find("value").GetComponent<TextMeshProUGUI>().text = room.CustomProperties["Domination"].ToString();
-        informationPanel.Find("powersPanel").Find("value").GetComponent<TextMeshProUGUI>().text = room.CustomProperties["Powers"].ToString();
     }
 
     public void PlayersDisplay(GameObject roomInstance, RoomInfo room)

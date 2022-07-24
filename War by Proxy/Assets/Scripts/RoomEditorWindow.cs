@@ -6,18 +6,17 @@ using TMPro;
 
 public class RoomEditorWindow : MonoBehaviour
 {
-    List<string> gameModes = new List<string>{ "FFA", "KOTH", "Control"};
-    List<List<string>> maps = new List<List<string>> { maps1, maps2, maps3};
-    static List<string> maps1 = new List<string>{ "Map 1_1","Map 1_2","Map 1_3","Map 1_4" };
-    static List<string> maps2 = new List<string>{ "Map 2_1","Map 2_2","Map 2_3","Map 2_4","Map 2_5","Map 2_6","Map 2_7","Map 2_8","Map 2_9","Map 2_10","Map 2_11","Map 2_12", };
-    static List<string> maps3 = new List<string>{ "Map 3_1","Map 3_2","Map 3_3" };
+    List<string> gameModes = new List<string>{ "FFA", "PD"};
+    List<List<Map>> maps = new List<List<Map>> { maps1, maps2};
+    static List<Map> maps1 = new List<Map>{ new Map("Islander", 16, 14, 2), new Map("Lukewarm", 19, 16, 2), new Map("Mesial", 23, 15, 2)};
+    static List<Map> maps2 = new List<Map>{ new Map("Sudetes", 19, 19, 2), new Map("Bridgeburner", 18, 14, 2), new Map("Ringed Lake", 24, 25, 2) };
     static List<string> descriptions = new List<string>
     {
-        "FFA - Standard gamemode. Player is eliminated when they lose all of their units or HQ. Last player/team standing wins",
-        "KOTH - Player occupying a special building (hill) in the middle of the map earns points. If it is held for 5 turns, the player occupying the hill wins",
-        "Control - Multiple special buildings are set around the map. Controlling any number of them earns points. Once a treshold is reached by a player, that player wins"
+        "FFA - Standard gamemode. Player is eliminated when they lose all of their units or HQ. Players can recruit more units. Last player/team standing wins",
+        "PD - Pre-Deployed. All units are already deployed for players. Map lacks any recruitment buildings. Same victory conditions from FFA apply"
     };
     private int selectedIndex = 0;
+    private Map selectedMap = null;
     public GameObject GameModesList;
     public GameObject selectedModeText;
     public GameObject previousModeText;
@@ -142,11 +141,11 @@ public class RoomEditorWindow : MonoBehaviour
             }
         }
 
-        foreach(string mapName in maps[index])
+        foreach(Map map in maps[index])
         {
             GameObject mapButton = Instantiate(mapButtonPrefab, mapsListContent.transform);
-            mapButton.transform.Find("Text").GetComponent<Text>().text = mapName;
-            mapButton.GetComponent<Button>().onClick.AddListener(() => MapShow(mapName));
+            mapButton.transform.Find("Text").GetComponent<Text>().text = map.GetName();
+            mapButton.GetComponent<Button>().onClick.AddListener(() => MapShow(map));
         }
     }
 
@@ -155,13 +154,50 @@ public class RoomEditorWindow : MonoBehaviour
         informationText.GetComponent<TextMeshProUGUI>().text = descriptions[index];
     }
 
-    public void MapShow(string display)
+    public void MapShow(Map display)
     {
-        mapDisplayName.GetComponent<Text>().text = display;
+        mapDisplayName.GetComponent<Text>().text = display.GetName();
+        selectedMap = display;
     }
 
-    public string GetMap()
+    public Map GetMap()
     {
-        return mapDisplayName.GetComponent<Text>().text;
+        return selectedMap;
+    }
+
+    public class Map
+    {
+        private string mapName;
+        private int mapWidth;
+        private int mapHeight;
+        private int mapPlayerSpots;
+
+        public Map(string mapname, int mapwidth, int mapheight, int mapplayerspots)
+        {
+            this.mapName = mapname;
+            this.mapWidth = mapwidth;
+            this.mapHeight = mapheight;
+            this.mapPlayerSpots = mapplayerspots;
+        }
+
+        public string GetName()
+        {
+            return mapName;
+        }
+
+        public int GetWidth()
+        {
+            return mapWidth;
+        }
+
+        public int GetHeight()
+        {
+            return mapHeight;
+        }
+
+        public int GetSpots()
+        {
+            return mapPlayerSpots;
+        }
     }
 }

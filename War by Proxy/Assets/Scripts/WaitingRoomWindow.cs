@@ -17,13 +17,6 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
 
     public GameObject mapDisplay;
     public GameObject PlayersList;
-    public GameObject resourcesPanel;
-    public GameObject turnsLimitPanel;
-    public GameObject weatherPanel;
-    public GameObject texturesPanel;
-    public GameObject fogPanel;
-    public GameObject dominationPanel;
-    public GameObject powersPanel;
     public GameObject PlayerPrefab;
 
     public IEnumerator Wait()
@@ -46,7 +39,7 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
     public void Init()
     {
         GetCurrentRoomPlayers();
-        InformationDisplay();
+        mapDisplay.GetComponent<Text>().text = PhotonNetwork.CurrentRoom.CustomProperties["MapName"].ToString();
         InitPlayers();
         PlayersDisplay();
     }
@@ -57,24 +50,6 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
         {
             GameObject.Destroy(child.gameObject);
         }
-    }
-
-    public string BoolToInfo(bool check)
-    {
-        if(check) return "On";
-        return "Off";
-    }
-
-    public void InformationDisplay()
-    {
-        mapDisplay.GetComponent<Text>().text = PhotonNetwork.CurrentRoom.CustomProperties["Map"].ToString();
-        resourcesPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["Resources"].ToString();
-        turnsLimitPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["TurnsLimit"].ToString();
-        weatherPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["Weather"].ToString();
-        texturesPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["LandTexture"].ToString();
-        fogPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["Fog"].ToString();
-        dominationPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["Domination"].ToString();
-        powersPanel.transform.Find("value").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.CurrentRoom.CustomProperties["Powers"].ToString();
     }
 
     public void Refresh()

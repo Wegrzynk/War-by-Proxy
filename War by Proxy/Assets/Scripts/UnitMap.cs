@@ -193,11 +193,14 @@ public class Unitmap
         SaveSystem saveSystem = new SaveSystem();
         SaveObject saveObject = saveSystem.LoadObject<SaveObject>(filename);
         ClearGrid();
-        foreach (Unit.SaveObject UnitSaveObject in saveObject.UnitSaveObjectArray)
+        if(saveObject != null)
         {
-            grid.SetGridObject(UnitSaveObject.x, UnitSaveObject.z, new Unit(grid, UnitSaveObject.x, UnitSaveObject.z));
-            grid.GetGridObject(UnitSaveObject.x, UnitSaveObject.z).SetUnitType(UnitSaveObject.unitType, UnitSaveObject.team, UnitSaveObject.ammo, UnitSaveObject.fuel, UnitSaveObject.loadedUnits, UnitSaveObject.upgradeCounter);
-            grid.TriggerGenericGridChanged(UnitSaveObject.x, UnitSaveObject.z);
+            foreach (Unit.SaveObject UnitSaveObject in saveObject.UnitSaveObjectArray)
+            {
+                grid.SetGridObject(UnitSaveObject.x, UnitSaveObject.z, new Unit(grid, UnitSaveObject.x, UnitSaveObject.z));
+                grid.GetGridObject(UnitSaveObject.x, UnitSaveObject.z).SetUnitType(UnitSaveObject.unitType, UnitSaveObject.team, UnitSaveObject.ammo, UnitSaveObject.fuel, UnitSaveObject.loadedUnits, UnitSaveObject.upgradeCounter);
+                grid.TriggerGenericGridChanged(UnitSaveObject.x, UnitSaveObject.z);
+            }
         }
         OnLoaded?.Invoke(this, EventArgs.Empty);
     }

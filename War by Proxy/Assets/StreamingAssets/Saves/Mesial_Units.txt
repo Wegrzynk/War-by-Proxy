@@ -1,0 +1,14 @@
+{
+    "UnitSaveObjectArray": [
+        {
+            "unitType": 9,
+            "health": 100,
+            "team": 2,
+            "x": 18,
+            "z": 11,
+            "ammo": 9,
+            "fuel": 99,
+            "upgradeCounter": 0
+        }
+    ]
+}

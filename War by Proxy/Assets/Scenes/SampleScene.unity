@@ -4007,6 +4007,7 @@ MonoBehaviour:
   list: {fileID: 2135088578}
   listContent: {fileID: 363764257}
   mapButtonPrefab: {fileID: 6059908219869953856, guid: e023a02ea06213741bcfa9ab9fa32ada, type: 3}
+  mainCamera: {fileID: 963194228}
   debugMode: 4
 --- !u!4 &434541797
 Transform:
@@ -7794,7 +7795,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
-  m_LocalPosition: {x: 14.93, y: 17.4, z: -1.29}
+  m_LocalPosition: {x: 15, y: 18, z: -2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

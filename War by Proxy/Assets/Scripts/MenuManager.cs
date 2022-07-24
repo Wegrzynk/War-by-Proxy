@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Audio;
@@ -10,19 +11,15 @@ using Photon.Realtime;
 public class MenuManager : MonoBehaviourPunCallbacks
 {
     public GameObject mainMenuWindow;
-    public GameObject campaignWindow;
     public GameObject multiplayerWindow;
     public GameObject optionsWindow;
-    public GameObject extrasWindow;
     public GameObject generalOptionsWindow;
     public GameObject videoOptionsWindow;
     public GameObject audioOptionsWindow;
     public GameObject roomEditorWindow;
-    public GameObject matchEditorWindow;
     public GameObject waitingRoomWindow;
     public GameObject playersEditorWindow;
     public GameObject roomListWindow;
-    public GameObject navigationMap;
     public GameObject loadingScreen;
 
     public AudioMixer audioMixer;
@@ -150,7 +147,6 @@ public class MenuManager : MonoBehaviourPunCallbacks
     public void Reset()
     {
         roomEditorWindow.GetComponent<RoomEditorWindow>().SetIndex(0);
-        matchEditorWindow.GetComponent<MatchEditorWindow>().SetIndex(0);
     }
 
     public void CreateRoom(bool online)
@@ -166,58 +162,10 @@ public class MenuManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void SampleRooms()
-    {
-        Room sampleRoom1 = new Room();
-        int[] sampleAlliances1 = new int[]{ 0, 0, 0, 0 };
-        sampleRoom1.setMap("Two Islands");
-        sampleRoom1.SetOnline(true);
-        sampleRoom1.setData(1000, 20, false, true, false, "Clear", "Regular", "Balanced");
-        sampleRoom1.SetAlliances(sampleAlliances1);
-        sampleRoom1.InsertPlayer(0, "Host");
-        sampleRoom1.InsertPlayer(1, "Random_Player");
-
-        Room sampleRoom2 = new Room();
-        int[] sampleAlliances2 = new int[]{ 1, 1, 2, 2 };
-        sampleRoom2.setMap("Desolation");
-        sampleRoom2.SetOnline(true);
-        sampleRoom2.setData(1000, 15, true, false, true, "Rain", "Wasteland", "Balanced");
-        sampleRoom2.SetAlliances(sampleAlliances2);
-        sampleRoom2.InsertPlayer(0, "Host");
-
-        Room sampleRoom3 = new Room();
-        int[] sampleAlliances3 = new int[]{ 3, 2, 2, 3 };
-        sampleRoom3.setMap("Tundra");
-        sampleRoom3.SetOnline(true);
-        sampleRoom3.setData(2000, 0, true, true, false, "Blizzard", "Snowlands", "Balanced");
-        sampleRoom3.SetAlliances(sampleAlliances3);
-        sampleRoom3.InsertPlayer(0, "Host");
-
-        List<Room> sampleRoomsList = new List<Room>{ sampleRoom1, sampleRoom2, sampleRoom3};
-        roomListWindow.GetComponent<RoomListWindow>().ProvideSampleRooms(sampleRoomsList);
-    }
-
-    public void MatchEditorOnlineCheck()
-    {
-        if(newRoom.isOnline)
-        {
-            matchEditorWindow.transform.Find("aiGameplanPanel").gameObject.SetActive(false);
-            matchEditorWindow.transform.Find("aiGameplanList").gameObject.SetActive(false);
-            matchEditorCreateRoom.SetActive(true);
-            matchEditorStartMatch.SetActive(false);
-        }
-        else{
-            matchEditorWindow.transform.Find("aiGameplanPanel").gameObject.SetActive(true);
-            matchEditorWindow.transform.Find("aiGameplanList").gameObject.SetActive(true);
-            matchEditorCreateRoom.SetActive(false);
-            matchEditorStartMatch.SetActive(true);
-        }
-    }
-
     public void CreateNewRoom1()
     {
         newRoom.setMap(roomEditorWindow.GetComponent<RoomEditorWindow>().GetMap());
-        newRoom.SetSpots(2);
+        newRoom.SetSpots(newRoom.roomMap.GetSpots());
         playersEditorWindow.GetComponent<PlayersEditorWindow>().SetRoom(newRoom);
     }
 
@@ -229,66 +177,38 @@ public class MenuManager : MonoBehaviourPunCallbacks
         ExitGames.Client.Photon.Hashtable playerCustomProperties = new ExitGames.Client.Photon.Hashtable();
         playerCustomProperties["Index"] = playersEditorWindow.GetComponent<PlayersEditorWindow>().GetHostSpot();
         PhotonNetwork.SetPlayerCustomProperties(playerCustomProperties);
-    }
 
-    public void CreateNewRoom3(bool online)
-    {
-        MatchEditorWindow helper = matchEditorWindow.GetComponent<MatchEditorWindow>();
-        newRoom.setData
-        (
-            int.Parse(helper.resourcesInput.GetComponent<TMP_InputField>().text),
-            int.Parse(helper.turnsInput.GetComponent<TMP_InputField>().text),
-            helper.fogCheckmark.activeSelf,
-            helper.dominationCheckmark.activeSelf,
-            helper.powersCheckmark.activeSelf,
-            helper.selectedWeatherText.GetComponent<TextMeshProUGUI>().text,
-            helper.selectedTexturesText.GetComponent<TextMeshProUGUI>().text,
-            helper.selectedAIText.GetComponent<TextMeshProUGUI>().text
-        );
-        if(online)
+        if (!PhotonNetwork.IsConnected)
         {
-            if (!PhotonNetwork.IsConnected)
-            {
-                return;
-            }
-            ExitGames.Client.Photon.Hashtable myCustomProperties = new ExitGames.Client.Photon.Hashtable();
-            int value = Random.Range(0, 9999);
-            newRoom.setName(newRoom.roomMap + value.ToString());
-            RoomOptions options = new RoomOptions();
-            myCustomProperties["Map"] = newRoom.roomMap;
-            myCustomProperties["Resources"] = newRoom.roomResources;
-            myCustomProperties["TurnsLimit"] = newRoom.roomTurnsLimit;
-            myCustomProperties["Weather"] = newRoom.roomWeather;
-            myCustomProperties["LandTexture"] = newRoom.roomTextures;
-            myCustomProperties["Fog"] = newRoom.roomFog;
-            myCustomProperties["Domination"] = newRoom.roomDomination;
-            myCustomProperties["Powers"] = newRoom.roomPowers;
-            myCustomProperties["Alliances"] = newRoom.alliances;
-            myCustomProperties["PlayerNames"] = newRoom.players;
-            options.BroadcastPropsChangeToAll = true;
-            options.MaxPlayers = 2;
-            options.IsVisible = true;
-            options.CustomRoomProperties = myCustomProperties;
-            options.CustomRoomPropertiesForLobby = new string[10]
-            {
-                "Map",
-                "Resources",
-                "TurnsLimit",
-                "Weather",
-                "LandTexture",
-                "Fog",
-                "Domination",
-                "Powers",
-                "Alliances",
-                "PlayerNames",
-            };
-            PhotonNetwork.CreateRoom(newRoom.roomMap + value.ToString(), options, TypedLobby.Default);
+            return;
         }
+        ExitGames.Client.Photon.Hashtable myCustomProperties = new ExitGames.Client.Photon.Hashtable();
+        int value = UnityEngine.Random.Range(0, 9999);
+        newRoom.setName(newRoom.roomMap + value.ToString());
+        RoomOptions options = new RoomOptions();
+        myCustomProperties["MapName"] = newRoom.roomMap.GetName();
+        myCustomProperties["Width"] = newRoom.roomMap.GetWidth();
+        myCustomProperties["Height"] = newRoom.roomMap.GetHeight();
+        myCustomProperties["Alliances"] = newRoom.alliances;
+        myCustomProperties["PlayerNames"] = newRoom.players;
+        options.BroadcastPropsChangeToAll = true;
+        options.MaxPlayers = ((byte)newRoom.playerSpots);
+        options.IsVisible = true;
+        options.CustomRoomProperties = myCustomProperties;
+        options.CustomRoomPropertiesForLobby = new string[5]
+        {
+            "MapName",
+            "Width",
+            "Height",
+            "Alliances",
+            "PlayerNames",
+        };
+        PhotonNetwork.CreateRoom(newRoom.roomMap + value.ToString(), options, TypedLobby.Default);
     }
 
     public override void OnCreatedRoom()
     {
-        SwipeAway(matchEditorWindow);
+        SwipeAway(playersEditorWindow);
         SwipeIn(waitingRoomWindow);
         waitingRoomWindow.GetComponent<WaitingRoomWindow>().Init();
     }
@@ -312,7 +232,6 @@ public class MenuManager : MonoBehaviourPunCallbacks
                 int index = listings.FindIndex( x => x.Name == info.Name);
                 if (index != -1)
                 {
-                    //Destroy(GameObject.Find(info.Name));
                     listings.RemoveAt(index);
                 }
             }
@@ -321,12 +240,7 @@ public class MenuManager : MonoBehaviourPunCallbacks
                 int index = listings.FindIndex(x => x.Name == info.Name);
                 if(index == -1)
                 {
-                    //GameObject listing = Instantiate(roomPrefab, roomsListContent.transform);
-                    //if (listing != null)
-                    //{
-                        //listing.SetRoomInfo(info);
                         listings.Add(info);
-                    //}
                 }
             }
         }
@@ -358,18 +272,10 @@ public class MenuManager : MonoBehaviourPunCallbacks
     public class Room
     {
         public string roomName;
-        public string roomMap;
+        public RoomEditorWindow.Map roomMap;
         public int playerSpots;
         public string[] players;
         public int[] alliances;
-        public int roomResources;
-        public int roomTurnsLimit;
-        public bool roomFog;
-        public bool roomDomination;
-        public bool roomPowers;
-        public string roomWeather;
-        public string roomTextures;
-        public string roomAI;
 
         public bool isCreated;
         public bool isOnline;
@@ -377,18 +283,10 @@ public class MenuManager : MonoBehaviourPunCallbacks
         public Room()
         {
             this.roomName = "Test";
-            this.roomMap = "Map 2_1";
+            this.roomMap = null;
             this.playerSpots = 2;
             this.players = new string[playerSpots];
             this.alliances = new int[playerSpots];
-            this.roomResources = 1000;
-            this.roomTurnsLimit = 15;
-            this.roomFog = false;
-            this.roomDomination = false;
-            this.roomPowers = false;
-            this.roomWeather = "Clear";
-            this.roomTextures = "Regular";
-            this.roomAI = "Balanced";
 
             this.isCreated = false;
             this.isOnline = false;
@@ -404,7 +302,7 @@ public class MenuManager : MonoBehaviourPunCallbacks
             this.roomName = newName;
         }
 
-        public void setMap(string newMap)
+        public void setMap(RoomEditorWindow.Map newMap)
         {
             this.roomMap = newMap;
         }
@@ -433,18 +331,6 @@ public class MenuManager : MonoBehaviourPunCallbacks
             {
                 players[i] = "";
             }
-        }
-
-        public void setData(int newResources, int newTurnsLimit, bool newFog, bool newDomination, bool newPowers, string newWeather, string newTextures, string newAI)
-        {
-            this.roomResources = newResources;
-            this.roomTurnsLimit = newTurnsLimit;
-            this.roomFog = newFog;
-            this.roomDomination = newDomination;
-            this.roomPowers = newPowers;
-            this.roomWeather = newWeather;
-            this.roomTextures = newTextures;
-            this.roomAI = newAI;
         }
     }
 }
