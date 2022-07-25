@@ -13,25 +13,25 @@ public class MenuManager : MonoBehaviourPunCallbacks
     public GameObject mainMenuWindow;
     public GameObject multiplayerWindow;
     public GameObject optionsWindow;
-    public GameObject generalOptionsWindow;
-    public GameObject videoOptionsWindow;
-    public GameObject audioOptionsWindow;
     public GameObject roomEditorWindow;
     public GameObject waitingRoomWindow;
     public GameObject playersEditorWindow;
     public GameObject roomListWindow;
     public GameObject loadingScreen;
 
+    public TMP_Dropdown resolutionsDropdown;
     public AudioMixer audioMixer;
+    public Slider masterSlider;
     public GameObject masterSliderText;
-    public GameObject musicSliderText;
-    public GameObject effectsSliderText;
+    Resolution[] resolutions;
+    public bool showgrid = false; 
 
-    public GameObject matchEditorCreateRoom;
-    public GameObject matchEditorStartMatch;
+    int resolutionOption;
+    int fullscreenOption;
+    int showgridOption;
+    float volumeOption;
 
     public Room newRoom;
-
     public List<RoomInfo> listings = new List<RoomInfo>();
 
     IEnumerator Hold1(GameObject window)
@@ -76,42 +76,78 @@ public class MenuManager : MonoBehaviourPunCallbacks
         window.GetComponent<Animation>().Play("FadeIn");
     }
 
+    void Start()
+    {
+        resolutions = Screen.resolutions;
+        resolutionsDropdown.ClearOptions();
+        List<string> options = new List<string>();
+        int currentResolutionIndex = 0;
+        for(int i = 0; i < resolutions.Length; i++)
+        {
+            string option = resolutions[i].width + "x" + resolutions[i].height + "@" + resolutions[i].refreshRate + "hz";
+            options.Add(option);
+            if(PlayerPrefs.GetInt("resolution", -1) == -1 && resolutions[i].width == Screen.currentResolution.width && resolutions[i].height == Screen.currentResolution.height && resolutions[i].refreshRate == Screen.currentResolution.refreshRate)
+            {
+                currentResolutionIndex = i;
+            }
+        }
+
+        resolutionsDropdown.AddOptions(options);
+        resolutionsDropdown.value = currentResolutionIndex;
+        resolutionsDropdown.RefreshShownValue();
+
+        LoadOptions();
+        SetMasterVolume(volumeOption);
+        masterSlider.value = volumeOption;
+        optionsWindow.transform.Find("fullscreenCheckmarkPanel").Find("checkmarkButton").Find("checkmark").gameObject.SetActive(Convert.ToBoolean(fullscreenOption));
+        optionsWindow.transform.Find("showGridCheckmarkPanel").Find("checkmarkButton").Find("checkmark").gameObject.SetActive(Convert.ToBoolean(showgridOption));
+        if(resolutionOption != -1)
+        {
+            resolutionsDropdown.value = resolutionOption;
+            resolutionsDropdown.RefreshShownValue();
+        }
+    }
+
     public void SetMasterVolume(float volume)
     {
         int percentageVolume = Mathf.RoundToInt((volume + 80) * 1.25f);
         masterSliderText.GetComponent<TextMeshProUGUI>().text = "%" + percentageVolume.ToString();
         audioMixer.SetFloat("masterVolume", volume);
+        PlayerPrefs.SetFloat("volume", volume);
     }
 
-    public void SetMusicVolume(float volume)
+    public void SetFullscreen(bool isFullscreen)
     {
-        int percentageVolume = Mathf.RoundToInt((volume + 80) * 1.25f);
-        musicSliderText.GetComponent<TextMeshProUGUI>().text = "%" + percentageVolume.ToString();
-        audioMixer.SetFloat("musicVolume", volume);
+        optionsWindow.transform.Find("fullscreenCheckmarkPanel").Find("checkmarkButton").Find("checkmark").gameObject.SetActive(isFullscreen);
+        Screen.fullScreen = isFullscreen;
+        PlayerPrefs.SetInt("fullscreen", Convert.ToInt32(isFullscreen));
     }
 
-    public void SetEffectsVolume(float volume)
+    public void SetShowGrid(bool gridIsShown)
     {
-        int percentageVolume = Mathf.RoundToInt((volume + 80) * 1.25f);
-        effectsSliderText.GetComponent<TextMeshProUGUI>().text = "%" + percentageVolume.ToString();
-        audioMixer.SetFloat("effectsVolume", volume);
+        optionsWindow.transform.Find("showGridCheckmarkPanel").Find("checkmarkButton").Find("checkmark").gameObject.SetActive(gridIsShown);
+        showgrid = gridIsShown;
+        PlayerPrefs.SetInt("showgrid", Convert.ToInt32(gridIsShown));
+    }
+
+    public void SetResolution(int resolutionIndex)
+    {
+        Resolution resolution = resolutions[resolutionIndex];
+        Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreen);
+        PlayerPrefs.SetInt("resolution", resolutionIndex);
+    }
+
+    public void LoadOptions()
+    {
+        resolutionOption = PlayerPrefs.GetInt("resolution", -1);
+        fullscreenOption = PlayerPrefs.GetInt("fullscreen", 1);
+        showgridOption = PlayerPrefs.GetInt("showgrid", 0);
+        volumeOption = PlayerPrefs.GetFloat("volume", -40f);
     }
 
     public void QuitGame()
     {
         Application.Quit();
-    }
-
-    public void ChangeMode(GameObject checkmark)
-    {
-        if(checkmark.activeInHierarchy)
-        {
-            checkmark.SetActive(false);
-        } 
-        else 
-        {
-            checkmark.SetActive(true);
-        }
     }
 
     public void SwipeAway(GameObject window)
@@ -176,6 +212,7 @@ public class MenuManager : MonoBehaviourPunCallbacks
         newRoom.InsertPlayer(playersEditorWindow.GetComponent<PlayersEditorWindow>().GetHostSpot(), PhotonNetwork.LocalPlayer.NickName);
         ExitGames.Client.Photon.Hashtable playerCustomProperties = new ExitGames.Client.Photon.Hashtable();
         playerCustomProperties["Index"] = playersEditorWindow.GetComponent<PlayersEditorWindow>().GetHostSpot();
+        playerCustomProperties["ShowGrid"] = showgrid;
         PhotonNetwork.SetPlayerCustomProperties(playerCustomProperties);
 
         if (!PhotonNetwork.IsConnected)

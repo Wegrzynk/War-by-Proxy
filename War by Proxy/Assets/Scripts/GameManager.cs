@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviourPun
     public GameObject list;
     public GameObject listContent;
     public GameObject mapButtonPrefab;
+    public GameObject visibleGridPrefab;
     public int[,] damageMatrix;
     int mapSizeX;
     int mapSizeZ;
@@ -225,6 +226,10 @@ public class GameManager : MonoBehaviourPun
             {
                 for (int x = 0; x < mapSizeX; x++)
                 {
+                    if((bool)PhotonNetwork.LocalPlayer.CustomProperties["ShowGrid"])
+                    {
+                        Instantiate(visibleGridPrefab, new Vector3(x * 2 - 1, 0, z * 2 - 1), Quaternion.identity, map);
+                    }
                     TilemapObject tileObject = tilemap.GetGrid().GetGridObject(x, z);
                     TilemapObject tt = tileTypes[tilemap.GetIntFromSprite(x, z)];
                     GameObject tileInstance = Instantiate(tt.tileVisualPrefab, new Vector3(x * 2, 0, z * 2), Quaternion.identity, map);

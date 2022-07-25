@@ -99,6 +99,7 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
     {
         ExitGames.Client.Photon.Hashtable myCustomProperties = new ExitGames.Client.Photon.Hashtable();
         myCustomProperties["Index"] = index;
+        myCustomProperties["ShowGrid"] = menuManager.GetComponent<MenuManager>().showgrid;
         PhotonNetwork.SetPlayerCustomProperties(myCustomProperties);
         PhotonNetwork.JoinRoom(room.Name);
     }

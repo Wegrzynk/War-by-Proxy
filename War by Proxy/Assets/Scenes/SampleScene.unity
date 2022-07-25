@@ -4158,6 +4158,7 @@ MonoBehaviour:
   list: {fileID: 2135088578}
   listContent: {fileID: 363764257}
   mapButtonPrefab: {fileID: 6059908219869953856, guid: e023a02ea06213741bcfa9ab9fa32ada, type: 3}
+  visibleGridPrefab: {fileID: 2424744806398279326, guid: dc1fd9dfdd34a014692626b2feb1e6b7, type: 3}
   mainCamera: {fileID: 963194228}
   debugMode: 4
 --- !u!4 &434541797
@@ -12989,12 +12990,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96

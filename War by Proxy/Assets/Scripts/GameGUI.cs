@@ -35,6 +35,11 @@ public class GameGUI : MonoBehaviourPunCallbacks
     public GameObject matchoverviewprefab;
     public GameObject mainscriptholder;
 
+    void Start()
+    {
+        RuntimePreviewGenerator.PreviewDirection = new Vector3(1, -1, 1);
+    }
+
     public void ShowPlayerInfo(string direction, Material[] colours, Player player, int turnsPassed)
     {
         if(direction == "left")
