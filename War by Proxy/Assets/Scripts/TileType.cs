@@ -111,9 +111,9 @@ public class TilemapObject
             case 0: return movementPenaltyFoot;
             case 1: return movementPenaltyTires;
             case 2: return movementPenaltyThreads;
-            case 3: return movementPenaltyShip;
-            case 4: return movementPenaltyLander;
-            case 5: return movementPenaltyAir;
+            case 3: return movementPenaltyAir;
+            case 4: return movementPenaltyShip;
+            case 5: return movementPenaltyLander;
             default: return -1;
         }
     }
@@ -125,9 +125,9 @@ public class TilemapObject
             case 0: return movementPenaltyFoot;
             case 1: return movementPenaltyTires;
             case 2: return movementPenaltyThreads;
-            case 3: return movementPenaltyShip;
-            case 4: return movementPenaltyLander;
-            case 5: return movementPenaltyAir;
+            case 3: return movementPenaltyAir;
+            case 4: return movementPenaltyShip;
+            case 5: return movementPenaltyLander;
             default: return -1;
         }
     }

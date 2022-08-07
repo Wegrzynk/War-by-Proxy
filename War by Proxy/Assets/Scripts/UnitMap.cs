@@ -124,6 +124,7 @@ public class Unitmap
     {
         attackDamage = Mathf.RoundToInt(damageMatrix[attacker.GetIntFromUnit(),defender.GetIntFromUnit()] * (1 + (float)attacker.GetUpgradeCounter() / 10) * ((float)attacker.GetHealth() / 100) * ((float)(1000 - (defenderDefenceRating * defender.GetHealth())) / 1000));
         CounterattackDamage = Mathf.RoundToInt(damageMatrix[defender.GetIntFromUnit(),attacker.GetIntFromUnit()] * (1 + (float)defender.GetUpgradeCounter() / 10) * (((float)defender.GetHealth() - attackDamage) / 100) * ((float)(1000 - (attackerDefenceRating * attacker.GetHealth())) / 1000));
+        if (CounterattackDamage < 0) CounterattackDamage = 0;
     }
 
     public void ClearGrid()

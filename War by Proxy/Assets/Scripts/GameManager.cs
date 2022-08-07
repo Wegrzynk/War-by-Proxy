@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviourPun
     int z;
     int movementx;
     int movementz;
+    int movedx;
+    int movedz;
     int unloadindex;
     Transform tile;
     [SerializeField] Transform mainCamera;
@@ -897,6 +899,8 @@ public class GameManager : MonoBehaviourPun
                             if((graph[0].x == x && graph[0].z == z) || unitmap.GetGrid().GetGridObject(x, z) == null)
                             {
                                 unitmap.MoveUnit(graph[0].x, graph[0].z, x, z);
+                                movedx = x;
+                                movedz = z;
                                 bool actionmove = true;
                                 bool actionfire = false;
                                 bool actioncapture = false;
@@ -966,7 +970,7 @@ public class GameManager : MonoBehaviourPun
                         }
                     }
                 } 
-                else if (Input.GetMouseButtonDown(1) && unitSelected == "fire")
+                else if (Input.GetMouseButtonDown(0) && unitSelected == "fire")
                 {
                     if (MouseClickDetector(ref x, ref z, ref tile))
                     {
@@ -1024,7 +1028,7 @@ public class GameManager : MonoBehaviourPun
                         }
                     }
                 }
-                else if (Input.GetMouseButtonDown(1) && unitSelected == "load")
+                else if (Input.GetMouseButtonDown(0) && unitSelected == "load")
                 {
                     if (MouseClickDetector(ref x, ref z, ref tile))
                     {
@@ -1056,7 +1060,7 @@ public class GameManager : MonoBehaviourPun
                         }
                     }
                 }
-                else if (Input.GetMouseButtonDown(1) && unitSelected == "unload")
+                else if (Input.GetMouseButtonDown(0) && unitSelected == "unload")
                 {
                     if (MouseClickDetector(ref x, ref z, ref tile))
                     {
@@ -1092,6 +1096,7 @@ public class GameManager : MonoBehaviourPun
                     targetables.Clear();
                     if (MouseClickDetector(ref x, ref z))
                     {
+                        TilemapObject tileChecker = tilemap.GetGrid().GetGridObject(x, z);
                         if(localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(x, z)))
                         {
                             graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false);
@@ -1104,6 +1109,30 @@ public class GameManager : MonoBehaviourPun
                                 unitSelected = "move";
                             }
                         }
+                        else if(tileChecker.GetType().Equals(typeof(MilitaryBase)) && unitmap.GetGrid().GetGridObject(x, z) == null && ((MilitaryBase)tileChecker).GetTeam() == playersInMatch[localPlayerID].GetTeam())
+                        {
+                            MilitaryBase helper = (MilitaryBase)tileChecker;
+                            menuUp = true;
+                            PrintListUnits(militaryBaseRecruits, x, z, helper.GetTeam());
+                        }
+                        else if(tileChecker.GetType().Equals(typeof(Airport)) && unitmap.GetGrid().GetGridObject(x, z) == null && ((Airport)tileChecker).GetTeam() == playersInMatch[localPlayerID].GetTeam())
+                        {
+                            Airport helper = (Airport)tileChecker;
+                            menuUp = true;
+                            PrintListUnits(airportRecruits, x, z, helper.GetTeam());
+                        }
+                        else if(tileChecker.GetType().Equals(typeof(Port)) && unitmap.GetGrid().GetGridObject(x, z) == null && ((Port)tileChecker).GetTeam() == playersInMatch[localPlayerID].GetTeam())
+                        {
+                            Port helper = (Port)tileChecker;
+                            menuUp = true;
+                            PrintListUnits(portRecruits, x, z, helper.GetTeam());
+                        }
+                        else if(tileChecker.GetType().Equals(typeof(City)) && unitmap.GetGrid().GetGridObject(x, z) == null && ((City)tileChecker).GetTeam() == playersInMatch[localPlayerID].GetTeam())
+                        {
+                            City helper = (City)tileChecker;
+                            menuUp = true;
+                            PrintListCityUpgrades(cityUpgrades, x, z, tile, helper.GetTeam());
+                        }
                         else
                         {
                             canvas.GetComponent<GameGUI>().quickmenu.SetActive(true);
@@ -1115,96 +1144,59 @@ public class GameManager : MonoBehaviourPun
                 {
                     if (MouseClickDetector(ref x, ref z, ref tile))
                     {
-                        if(unitmap.GetGrid().GetGridObject(x, z) != null)
+                        if (unitSelected == "false")
                         {
-                            canvas.GetComponent<GameGUI>().ShowExtendedInfo(tilemap.GetGrid().GetGridObject(x, z), tile.gameObject, unitmap.GetGrid().GetGridObject(x, z), unitmap.GetGrid().GetGridObject(x, z).GetUnitInstance());
-                        }
-                        else
-                        {
-                            canvas.GetComponent<GameGUI>().ShowExtendedInfo(tilemap.GetGrid().GetGridObject(x, z), tile.gameObject, null, null);
-                        }
-                    }
-                    menuUp = true;
-                }
-                else if (Input.GetKeyDown(KeyCode.R))
-                {
-                    pathmaking.ClearGrid();
-                    targetables.Clear();
-                    if (MouseClickDetector(ref x, ref z, ref tile))
-                    {
-                        TilemapObject tileChecker = tilemap.GetGrid().GetGridObject(x, z);
-                        if(tileChecker.GetType().Equals(typeof(MilitaryBase)) && menuUp == false && unitmap.GetGrid().GetGridObject(x, z) == null)
-                        {
-                            MilitaryBase helper = (MilitaryBase)tileChecker;
-                            menuUp = true;
-                            PrintListUnits(militaryBaseRecruits, x, z, helper.GetTeam());
-                        }
-                        else if(tileChecker.GetType().Equals(typeof(Airport)) && menuUp == false && unitmap.GetGrid().GetGridObject(x, z) == null)
-                        {
-                            Airport helper = (Airport)tileChecker;
-                            menuUp = true;
-                            PrintListUnits(airportRecruits, x, z, helper.GetTeam());
-                        }
-                        else if(tileChecker.GetType().Equals(typeof(Port)) && menuUp == false && unitmap.GetGrid().GetGridObject(x, z) == null)
-                        {
-                            Port helper = (Port)tileChecker;
-                            menuUp = true;
-                            PrintListUnits(portRecruits, x, z, helper.GetTeam());
-                        }
-                        else if(tileChecker.GetType().Equals(typeof(City)) && menuUp == false && unitmap.GetGrid().GetGridObject(x, z) == null && ((City)tileChecker).GetTeam() == playersInMatch[localPlayerID].GetTeam())
-                        {
-                            City helper = (City)tileChecker;
-                            menuUp = true;
-                            PrintListCityUpgrades(cityUpgrades, x, z, tile, helper.GetTeam());
-                        }
-                    }
-                }
-                else if (Input.GetKeyDown(KeyCode.C))
-                {
-                    pathmaking.ClearGrid();
-                    targetables.Clear();
-                    if (MouseClickDetector(ref x, ref z, ref tile))
-                    {
-                        TilemapObject tileChecker = tilemap.GetGrid().GetGridObject(x, z);
-                        Unit unitChecker = unitmap.GetGrid().GetGridObject(x, z);
-                        if(unitChecker != null && !(tileChecker.GetType().Equals(typeof(TilemapObject))) && unitChecker.GetTeam() != ((Building)tileChecker).GetTeam())
-                        {
-                            Building helper = (Building)tileChecker;
-                            helper.SetHealth(helper.GetHealth() - unitChecker.GetHealth());
-                            if(helper.GetHealth() <= 0)
+                            if(unitmap.GetGrid().GetGridObject(x, z) != null)
                             {
-                                helper.SetTeam(unitChecker.GetTeam());
-                                TilemapObject ttm = tileTypes[tilemap.GetIntFromSprite(x, z)];
-                                GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, tile.position, Quaternion.identity, map);
-                                tileInstance.name = tileChecker.ToString() + x + z;
-                                tileChecker.setTileVisual(tileInstance);
-                                helper.Visualize(teamColours[unitChecker.GetTeam()], tileInstance);
-                                Destroy(tile.gameObject);
+                                canvas.GetComponent<GameGUI>().ShowExtendedInfo(tilemap.GetGrid().GetGridObject(x, z), tile.gameObject, unitmap.GetGrid().GetGridObject(x, z), unitmap.GetGrid().GetGridObject(x, z).GetUnitInstance());
                             }
-                            photonView.RPC("SynchronizeCapture", RpcTarget.Others, x, z, tile.position, tileChecker.ToString() + x + z);
+                            else
+                            {
+                                canvas.GetComponent<GameGUI>().ShowExtendedInfo(tilemap.GetGrid().GetGridObject(x, z), tile.gameObject, null, null);
+                            }
+                            menuUp = true;
                         }
-                    }
-                }
-                else if (Input.GetKeyDown(KeyCode.D))
-                {
-                    pathmaking.ClearGrid();
-                    targetables.Clear();
-                    if (MouseClickDetector(ref x, ref z))
-                    {
-                        Unit unitChecker = unitmap.GetGrid().GetGridObject(x, z);
-                        if(unitChecker != null && unitChecker.GetIsActive())
+                        else if (unitSelected == "move")
                         {
-                            unitChecker.VisualDeactivation();
-                        } 
-                        else if(unitChecker != null && !unitChecker.GetIsActive())
+                            unitSelected = "false";
+                            foreach(GameObject selected in selectedTiles)
+                            {
+                                Destroy(selected);
+                            }
+                        }
+                        else if (unitSelected == "moved")
                         {
-                            unitChecker.VisualActivation();
+                            unitSelected = "move";
+                            targetables.Clear();
+                            unitmap.MoveUnit(movedx, movedz, graph[0].x, graph[0].z);
+                            canvas.GetComponent<GameGUI>().HideActionInfo();
+                        }
+                        else if (unitSelected == "fire" || unitSelected == "load" || unitSelected == "unload")
+                        {
+                            unitSelected = "move";
+                            targetables.Clear();
+                            GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(movementx, movementz).ToString() + movementx + movementz);
+                            if (movableUnit)
+                            {
+                                movableUnit.transform.position = new Vector3(graph[0].x * 2, 0.7f, graph[0].z * 2);
+                                movableUnit.name = unitmap.GetGrid().GetGridObject(movementx, movementz).ToString() + graph[0].x + graph[0].z;
+                                unitmap.GetGrid().GetGridObject(movementx, movementz).FuelCost(-(Mathf.Abs(movementx - graph[0].x) + Mathf.Abs(movementz - graph[0].z)));
+                            }
+                            unitmap.MoveUnit(movementx, movementz, graph[0].x, graph[0].z);
+                            foreach (GameObject selected in selectedTiles)
+                            {
+                                Destroy(selected);
+                            }
+                            for (int i = 0; i < graph.Count; i++)
+                            {
+                                selectedTiles.Add(Instantiate(selectedTile, new Vector3(graph[i].x * 2, 0.1f, graph[i].z * 2), Quaternion.identity, map));
+                            }
                         }
                     }
                 }
             }
 
-            if(MouseClickDetector(ref x, ref z, ref tile) && (lastSelected == null || lastSelected != tile) && menuUp == false)
+            if((lastSelected == null || lastSelected != tile) && menuUp == false && MouseClickDetector(ref x, ref z, ref tile))
             {
                 if(Input.mousePosition.x < Screen.width / 4 && currentguiside == "left")
                 {
