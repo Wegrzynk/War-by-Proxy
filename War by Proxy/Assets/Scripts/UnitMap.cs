@@ -43,7 +43,7 @@ public class Unitmap
         grid.TriggerGenericGridChanged(endX, endZ);
     }
 
-    public List<Unit> GetEnemyUnitsInRange(int x, int z)
+    public List<Unit> GetEnemyUnitsInRange(int x, int z, bool isStationedOnRadio)
     {
         int minRange = grid.GetGridObject(x, z).GetMinRange();
         int maxRange = grid.GetGridObject(x, z).GetMaxRange();
@@ -51,6 +51,10 @@ public class Unitmap
         {
             minRange = 1;
             maxRange = 1;
+        }
+        else if(maxRange > 0 && isStationedOnRadio)
+        {
+            maxRange++;
         }
         int counter = 0;
         List<Unit> targetableUnits = new List<Unit>();
@@ -125,6 +129,7 @@ public class Unitmap
         attackDamage = Mathf.RoundToInt(damageMatrix[attacker.GetIntFromUnit(),defender.GetIntFromUnit()] * (1 + (float)attacker.GetUpgradeCounter() / 10) * ((float)attacker.GetHealth() / 100) * ((float)(1000 - (defenderDefenceRating * defender.GetHealth())) / 1000));
         CounterattackDamage = Mathf.RoundToInt(damageMatrix[defender.GetIntFromUnit(),attacker.GetIntFromUnit()] * (1 + (float)defender.GetUpgradeCounter() / 10) * (((float)defender.GetHealth() - attackDamage) / 100) * ((float)(1000 - (attackerDefenceRating * attacker.GetHealth())) / 1000));
         if (CounterattackDamage < 0) CounterattackDamage = 0;
+        if (Mathf.Abs((float)(attacker.GetX() - defender.GetX())) + Mathf.Abs((float)(attacker.GetZ() - defender.GetZ())) > 1) CounterattackDamage = 0;
     }
 
     public void ClearGrid()

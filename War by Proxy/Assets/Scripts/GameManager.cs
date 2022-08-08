@@ -911,13 +911,13 @@ public class GameManager : MonoBehaviourPun
                                 if(unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() == 0 && unitmap.GetGrid().GetGridObject(x, z).GetCurrentAmmo() > 0)
                                 {
                                     targetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z));
+                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio))));
                                     if(targetables.Count > 1) actionfire = true;
                                 }
                                 else if(graph[0].x == x && graph[0].z == z && unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() > 0)
                                 {
                                     targetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z));
+                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio))));
                                     if(targetables.Count > 1) actionfire = true;
                                 }
                                 if(tilemap.GetGrid().GetGridObject(x, z).GetType().IsSubclassOf(typeof(Building)) 
@@ -1195,6 +1195,14 @@ public class GameManager : MonoBehaviourPun
                     }
                 }
             }
+            else
+            {
+                if(Input.GetMouseButtonDown(0) && menuUp == false && unitSelected == "false")
+                {
+                    canvas.GetComponent<GameGUI>().quickmenu.SetActive(true);
+                    menuUp = true;
+                }
+            }
 
             if((lastSelected == null || lastSelected != tile) && menuUp == false && MouseClickDetector(ref x, ref z, ref tile))
             {
@@ -1239,19 +1247,19 @@ public class GameManager : MonoBehaviourPun
             {
                 if(Input.mousePosition.x < Screen.width / 4 && mainCamera.position.x > 14)
                 {
-                    mainCamera.position = mainCamera.position + new Vector3(-0.04f, 0, 0);
+                    mainCamera.position = mainCamera.position + new Vector3(-0.2f, 0, 0);
                 }
                 if(Input.mousePosition.x > Screen.width - (Screen.width / 4) && mainCamera.position.x < mapSizeX * 2 - 16)
                 {
-                    mainCamera.position = mainCamera.position + new Vector3(0.04f, 0, 0);
+                    mainCamera.position = mainCamera.position + new Vector3(0.2f, 0, 0);
                 }
                 if(Input.mousePosition.y < Screen.height / 4 && mainCamera.position.z > -2)
                 {
-                    mainCamera.position = mainCamera.position + new Vector3(0, 0, -0.04f);
+                    mainCamera.position = mainCamera.position + new Vector3(0, 0, -0.2f);
                 }
                 if(Input.mousePosition.y > Screen.height - (Screen.height / 4) && mainCamera.position.z < mapSizeZ * 2 - 30)
                 {
-                    mainCamera.position = mainCamera.position + new Vector3(0, 0, 0.04f);
+                    mainCamera.position = mainCamera.position + new Vector3(0, 0, 0.2f);
                 }
             }
         }

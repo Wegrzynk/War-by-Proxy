@@ -152,7 +152,7 @@
     },
     {
       "tilemapSprite": "Outpost",
-      "defenceRating": 3,
+      "defenceRating": 4,
       "movementPenaltyFoot": 1,
       "movementPenaltyThreads": 1,
       "movementPenaltyTires": 1,

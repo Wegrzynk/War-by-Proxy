@@ -52,6 +52,7 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
             roomInstance.name = room.Name;
             PlayersDisplay(roomInstance, room);
             roomInstance.transform.Find("RoomName").Find("RoomNameText").GetComponent<TextMeshProUGUI>().text = "Room #" + counter + ": " + room.CustomProperties["MapName"].ToString();
+            roomInstance.transform.Find("mapDisplay").Find("mapDisplayName").GetComponent<Text>().text = room.CustomProperties["MapName"].ToString();
             counter++;
         }
     }
