@@ -10,11 +10,13 @@ public class Player
     private List<Building> ownedBuildings;
     private List<Unit> ownedLoadedUnits;
     private bool isActive;
+    private bool achievedVictory;
 
     public Player(int team, Tilemap tilemap, Unitmap unitmap)
     {
         this.team = team;
         isActive = false;
+        achievedVictory = false;
         ownedUnits = new List<Unit>();
         ownedLoadedUnits = new List<Unit>();
         ownedBuildings = new List<Building>();
@@ -40,6 +42,11 @@ public class Player
     public void SetIsActive(bool activation)
     {
         isActive = activation;
+    }
+
+    public void GrantWin()
+    {
+        achievedVictory = true;
     }
 
     public void AddUnit(Unit newUnit)
@@ -90,6 +97,11 @@ public class Player
     public int GetFunds()
     {
         return funds;
+    }
+
+    public bool GetVictoryStatus()
+    {
+        return achievedVictory;
     }
 
     public List<Unit> GetUnits()

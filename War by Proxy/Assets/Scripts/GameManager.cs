@@ -552,14 +552,28 @@ public class GameManager : MonoBehaviourPunCallbacks
         if(victory)
         {
             canvas.GetComponent<GameGUI>().ShowGameEndDialog(victory);
+            foreach(Player playa in playersInMatch)
+            {
+                if(playa.GetTeam() == localPlayerID + 1) photonView.RPC("SynchronizeGrantWin", RpcTarget.All, localPlayerID + 1);
+            }
             menuUp = true;
         }
     }
 
     public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
-        RemovePlayerFromGame((int)otherPlayer.CustomProperties["Index"]);
-        CheckVictoryConditions();
+        int leavingPlayerTeam = (int)otherPlayer.CustomProperties["Index"] + 1;
+        bool viable = false;
+        foreach(Player playa in playersInMatch)
+        {
+            Debug.Log(playa.GetTeam() + "=?=" + leavingPlayerTeam + ", victorystatus: " + playa.GetVictoryStatus());
+            if(playa.GetTeam() == leavingPlayerTeam && !playa.GetVictoryStatus()) viable = true;
+        }
+        if(viable)
+        {
+            RemovePlayerFromGame((int)otherPlayer.CustomProperties["Index"]);
+            CheckVictoryConditions();
+        }
     }
 
     public bool CheckAlliance(int player1, int player2)
@@ -683,6 +697,15 @@ public class GameManager : MonoBehaviourPunCallbacks
             turnCounter++;
         }
         localTurnSystem.TurnInit(playersInMatch[turnCounter]);
+    }
+
+    [PunRPC]
+    private void SynchronizeGrantWin(int team)
+    {
+        foreach(Player playa in playersInMatch)
+        {
+            if(playa.GetTeam() == team) playa.GrantWin();
+        }
     }
 
     private void Update()
@@ -1151,6 +1174,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                         }
                         else
                         {
+                            canvas.GetComponent<GameGUI>().quickmenu.transform.Find("QuickMenuEndTurn").GetComponent<Button>().interactable = true;
                             canvas.GetComponent<GameGUI>().quickmenu.SetActive(true);
                             menuUp = true;
                         }
@@ -1217,6 +1241,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 if (turnIndicator.activeSelf == true) turnIndicator.SetActive(false);
                 if(Input.GetMouseButtonDown(0) && menuUp == false && unitSelected == "false")
                 {
+                    canvas.GetComponent<GameGUI>().quickmenu.transform.Find("QuickMenuEndTurn").GetComponent<Button>().interactable = false;
                     canvas.GetComponent<GameGUI>().quickmenu.SetActive(true);
                     menuUp = true;
                 }
@@ -1250,7 +1275,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
             if(unitSelected == "fire" && MouseClickDetector(ref x, ref z, ref tile) && menuUp == false)
             {
-                if(tile.gameObject.tag == "Selected")
+                if(tile.gameObject.tag == "Selected" && unitmap.GetGrid().GetGridObject(x, z) != null && targetables.Contains(unitmap.GetGrid().GetGridObject(x, z)) && unitmap.GetGrid().GetGridObject(x, z) != targetables[0])
                 {
                     unitmap.SimulateAttack(targetables[0], unitmap.GetGrid().GetGridObject(x, z), damageMatrix, tilemap.GetGrid().GetGridObject(x, z).GetDefence(), tilemap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()).GetDefence(), out int attack, out int counterattack);
                     canvas.GetComponent<GameGUI>().ShowAttackInfo(Input.mousePosition, targetables[0].GetUnitInstance(), unitmap.GetGrid().GetGridObject(x, z).GetUnitInstance(), attack, counterattack);

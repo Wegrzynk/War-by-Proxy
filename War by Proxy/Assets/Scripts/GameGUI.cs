@@ -287,7 +287,7 @@ public class GameGUI : MonoBehaviourPunCallbacks
 
     public void LeaveGame()
     {
-        PhotonNetwork.LeaveRoom();
+        if(PhotonNetwork.NetworkClientState != Photon.Realtime.ClientState.Leaving) PhotonNetwork.LeaveRoom();
     }
 
     public override void OnLeftRoom()
