@@ -43,7 +43,7 @@ public class Unitmap
         grid.TriggerGenericGridChanged(endX, endZ);
     }
 
-    public List<Unit> GetEnemyUnitsInRange(int x, int z, bool isStationedOnRadio)
+    public List<Unit> GetEnemyUnitsInRange(int x, int z, bool isStationedOnRadio, GameManager allianceCheckScript)
     {
         int minRange = grid.GetGridObject(x, z).GetMinRange();
         int maxRange = grid.GetGridObject(x, z).GetMaxRange();
@@ -65,7 +65,7 @@ public class Unitmap
             {
                 if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
                 {
-                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() != grid.GetGridObject(x, z).GetTeam())
+                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() != grid.GetGridObject(x, z).GetTeam() && !allianceCheckScript.CheckAlliance(grid.GetGridObject(x+i, z+j).GetTeam(), grid.GetGridObject(x, z).GetTeam()))
                     {
                         targetableUnits.Add(grid.GetGridObject(x+i, z+j));
                     }

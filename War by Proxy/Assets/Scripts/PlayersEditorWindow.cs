@@ -16,6 +16,7 @@ public class PlayersEditorWindow : MonoBehaviour
     public GameObject playersList;
     public GameObject playerSettingsPrefab;
     public GameObject[] playerSettingsList;
+    public GameObject createRoomButton;
 
     public void Init()
     {
@@ -32,6 +33,7 @@ public class PlayersEditorWindow : MonoBehaviour
             playerSettingsList[i].transform.Find("TeamSelector").Find("SelectorRight").GetComponent<Button>().onClick.AddListener(() => MoveRight(copy));
             playerSettingsList[i].transform.Find("EnterSpotButton").GetComponent<Button>().onClick.AddListener(() => EnterSpot(copy));
         }
+        InteractableCheck();
     }
 
     public void Reset()
@@ -40,6 +42,29 @@ public class PlayersEditorWindow : MonoBehaviour
         {
             GameObject.Destroy(child.gameObject);
         }
+        createRoomButton.GetComponent<Button>().interactable = false;
+    }
+
+    public void DeactivateSettings()
+    {
+        for(int i = 0; i < room.playerSpots; i++)
+        {
+            playerSettingsList[i].transform.Find("TeamSelector").Find("SelectorLeft").GetComponent<Button>().interactable = false;
+            playerSettingsList[i].transform.Find("TeamSelector").Find("SelectorRight").GetComponent<Button>().interactable = false;
+            playerSettingsList[i].transform.Find("EnterSpotButton").GetComponent<Button>().interactable = false;
+        }
+    }
+
+    public void ReactivateSettings()
+    {
+        for(int i = 0; i < room.playerSpots; i++)
+        {
+            playerSettingsList[i].transform.Find("TeamSelector").Find("SelectorLeft").GetComponent<Button>().interactable = true;
+            playerSettingsList[i].transform.Find("TeamSelector").Find("SelectorRight").GetComponent<Button>().interactable = true;
+            playerSettingsList[i].transform.Find("EnterSpotButton").GetComponent<Button>().interactable = true;
+        }
+        this.transform.Find("returnButton").GetComponent<Button>().interactable = true;
+        createRoomButton.GetComponent<Button>().interactable = true;
     }
 
     public void SetRoom(MenuManager.Room newRoom)
@@ -62,6 +87,7 @@ public class PlayersEditorWindow : MonoBehaviour
         {
             playerIndexes[index]--;
         }
+        InteractableCheck();
         PrintSettings(index);
     }
 
@@ -75,6 +101,7 @@ public class PlayersEditorWindow : MonoBehaviour
         {
             playerIndexes[index]++;
         }
+        InteractableCheck();
         PrintSettings(index);
     }
 
@@ -89,6 +116,25 @@ public class PlayersEditorWindow : MonoBehaviour
         playerSettingsList[index].transform.Find("HostName").gameObject.GetComponent<TextMeshProUGUI>().text = PhotonNetwork.LocalPlayer.NickName;
         playerSettingsList[index].transform.Find("EnterSpotButton").gameObject.SetActive(false);
         chosenSpot = index;
+        InteractableCheck();
+    }
+
+    public void InteractableCheck()
+    {
+        if(chosenSpot != -1)
+        {
+            int checker = -1;
+            for(int i = 0; i < playerIndexes.Length; i++)
+            {
+                if(checker == -1) checker = playerIndexes[i];
+                if(playerIndexes[i] == 0 || playerIndexes[i] != checker) 
+                {
+                    createRoomButton.GetComponent<Button>().interactable = true;
+                    return;
+                }
+            }
+        }
+        createRoomButton.GetComponent<Button>().interactable = false;
     }
 
     public int[] GetArray()

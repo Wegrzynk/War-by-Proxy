@@ -7,14 +7,14 @@ public class Tilemap
 {
     public event EventHandler OnLoaded;
 
-    private GameGrid<TilemapObject> grid;
+    private GameGrid<TileType> grid;
 
     public Tilemap(int width, int height, float cellSize, Vector3 originPosition)
     {
-        grid = new GameGrid<TilemapObject>(width, height, cellSize, originPosition, false, (GameGrid<TilemapObject> g, int x, int z) => new TilemapObject(g, x, z));
+        grid = new GameGrid<TileType>(width, height, cellSize, originPosition, false, (GameGrid<TileType> g, int x, int z) => new TileType(g, x, z));
     }
 
-    public void SetTilemapSprite(Vector3 worldPosition, TilemapObject.TilemapSprite tilemapSprite, int team)
+    public void SetTilemapSprite(Vector3 worldPosition, TileType.TilemapSprite tilemapSprite, int team)
     {
         switch((int)tilemapSprite)
         {
@@ -26,12 +26,12 @@ public class Tilemap
             case 13: grid.SetGridObject(worldPosition, new Radio(grid.GetGridObject(worldPosition), team, 100, 2000)); break;
             case 14: grid.SetGridObject(worldPosition, new Lab(grid.GetGridObject(worldPosition), team, 100, 4000)); break;
             case 15: grid.SetGridObject(worldPosition, new Outpost(grid.GetGridObject(worldPosition), team, 100, 3000)); break;
-            default: grid.SetGridObject(worldPosition, new TilemapObject(grid.GetGridObject(worldPosition))); break;
+            default: grid.SetGridObject(worldPosition, new TileType(grid.GetGridObject(worldPosition))); break;
         }
-        TilemapObject tilemapObject = grid.GetGridObject(worldPosition);
-        if (tilemapObject != null)
+        TileType TileType = grid.GetGridObject(worldPosition);
+        if (TileType != null)
         {
-            tilemapObject.SetTilemapSprite(tilemapSprite);
+            TileType.SetTilemapSprite(tilemapSprite);
         }
     }
 
@@ -47,21 +47,21 @@ public class Tilemap
             case 13: grid.SetGridObject(worldPosition, new Radio(grid.GetGridObject(worldPosition), team, 100, 2000)); break;
             case 14: grid.SetGridObject(worldPosition, new Lab(grid.GetGridObject(worldPosition), team, 100, 4000)); break;
             case 15: grid.SetGridObject(worldPosition, new Outpost(grid.GetGridObject(worldPosition), team, 100, 3000)); break;
-            default: grid.SetGridObject(worldPosition, new TilemapObject(grid.GetGridObject(worldPosition))); break;
+            default: grid.SetGridObject(worldPosition, new TileType(grid.GetGridObject(worldPosition))); break;
         }
-        TilemapObject tilemapObject = grid.GetGridObject(worldPosition);
-        if (tilemapObject != null)
+        TileType TileType = grid.GetGridObject(worldPosition);
+        if (TileType != null)
         {
-            tilemapObject.SetTilemapSprite((TilemapObject.TilemapSprite)spriteInt);
+            TileType.SetTilemapSprite((TileType.TilemapSprite)spriteInt);
         }
     }
 
-    public List<TilemapObject> GetNeighbouringTiles(int x, int z, Unit checker, Unitmap unitmap)
+    public List<TileType> GetNeighbouringTiles(int x, int z, Unit checker, Unitmap unitmap)
     {
         int minRange = 1;
         int maxRange = 1;
         int counter = 0;
-        List<TilemapObject> neighbourtiles = new List<TilemapObject>();
+        List<TileType> neighbourtiles = new List<TileType>();
 
         for(int i=maxRange; i>=-maxRange; i--)
         {
@@ -90,76 +90,76 @@ public class Tilemap
 
     public int GetIntFromSprite(Vector3 worldPosition)
     {
-        TilemapObject tilemapObject = grid.GetGridObject(worldPosition);
+        TileType TileType = grid.GetGridObject(worldPosition);
         int intedSprite = -1;
-        if (tilemapObject != null)
+        if (TileType != null)
         {
-            intedSprite = tilemapObject.GetIntFromSprite();
+            intedSprite = TileType.GetIntFromSprite();
         }
         return intedSprite;
     }
 
     public int GetIntFromSprite(int x, int z)
     {
-        TilemapObject tilemapObject = grid.GetGridObject(x, z);
+        TileType TileType = grid.GetGridObject(x, z);
         int intedSprite = -1;
-        if (tilemapObject != null)
+        if (TileType != null)
         {
-            intedSprite = tilemapObject.GetIntFromSprite();
+            intedSprite = TileType.GetIntFromSprite();
         }
         return intedSprite;
     }
 
     public class SaveObject
     {
-        public TilemapObject.SaveObject[] tilemapObjectSaveObjectArray;
+        public TileType.SaveObject[] TileTypeSaveObjectArray;
     }
 
     public void Save(string filename)
     {
-        List<TilemapObject.SaveObject> tilemapObjectSaveObjectList = new List<TilemapObject.SaveObject>();
+        List<TileType.SaveObject> TileTypeSaveObjectList = new List<TileType.SaveObject>();
         for (int x = 0; x < grid.GetWidth(); x++)
         {
             for (int z = 0; z < grid.GetHeight(); z++)
             {
-                TilemapObject tilemapObject = grid.GetGridObject(x, z);
-                switch(tilemapObject)
+                TileType TileType = grid.GetGridObject(x, z);
+                switch(TileType)
                 {
                     case Radio r:
-                    tilemapObjectSaveObjectList.Add(((Radio)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((Radio)TileType).Save());
                     break;
                     case Lab l:
-                    tilemapObjectSaveObjectList.Add(((Lab)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((Lab)TileType).Save());
                     break;
                     case Outpost o:
-                    tilemapObjectSaveObjectList.Add(((Outpost)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((Outpost)TileType).Save());
                     break;
                     case City c:
-                    tilemapObjectSaveObjectList.Add(((City)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((City)TileType).Save());
                     break;
                     case MilitaryBase m:
-                    tilemapObjectSaveObjectList.Add(((MilitaryBase)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((MilitaryBase)TileType).Save());
                     break;
                     case Airport a:
-                    tilemapObjectSaveObjectList.Add(((Airport)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((Airport)TileType).Save());
                     break;
                     case Port p:
-                    tilemapObjectSaveObjectList.Add(((Port)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((Port)TileType).Save());
                     break;
                     case HQ h:
-                    tilemapObjectSaveObjectList.Add(((HQ)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((HQ)TileType).Save());
                     break;
                     case Building b:
-                    tilemapObjectSaveObjectList.Add(((Building)tilemapObject).Save());
+                    TileTypeSaveObjectList.Add(((Building)TileType).Save());
                     break;
                     default:
-                    tilemapObjectSaveObjectList.Add(tilemapObject.Save());
+                    TileTypeSaveObjectList.Add(TileType.Save());
                     break;
                 }
             }
         }
 
-        SaveObject saveObject = new SaveObject { tilemapObjectSaveObjectArray = tilemapObjectSaveObjectList.ToArray() };
+        SaveObject saveObject = new SaveObject { TileTypeSaveObjectArray = TileTypeSaveObjectList.ToArray() };
 
         SaveSystem saveSystem = new SaveSystem();
         saveSystem.SaveObject(filename, saveObject, true, false);
@@ -175,8 +175,8 @@ public class Tilemap
             {
                 for(int x = 0; x < grid.GetWidth(); x++)
                 {
-                    TilemapObject tilemapObject = grid.GetGridObject(x, z);
-                    tilemapObject.SetTilemapSprite(TilemapObject.TilemapSprite.Plains);
+                    TileType TileType = grid.GetGridObject(x, z);
+                    TileType.SetTilemapSprite(TileType.TilemapSprite.Plains);
                     grid.TriggerGenericGridChanged(x, z);
                 }
             }
@@ -184,43 +184,43 @@ public class Tilemap
         }
         else
         {
-            foreach (TilemapObject.SaveObject tilemapObjectSaveObject in saveObject.tilemapObjectSaveObjectArray)
+            foreach (TileType.SaveObject TileTypeSaveObject in saveObject.TileTypeSaveObjectArray)
             {
-                switch(tilemapObjectSaveObject.type)
+                switch(TileTypeSaveObject.type)
                 {
                     case "Radio":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new Radio(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health, tilemapObjectSaveObject.cost));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new Radio(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health, TileTypeSaveObject.cost));
                     break;
                     case "Lab":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new Lab(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health, tilemapObjectSaveObject.cost));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new Lab(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health, TileTypeSaveObject.cost));
                     break;
                     case "Outpost":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new Outpost(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health, tilemapObjectSaveObject.cost));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new Outpost(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health, TileTypeSaveObject.cost));
                     break;
                     case "City":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new City(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new City(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health));
                     break;
                     case "MilitaryBase":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new MilitaryBase(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new MilitaryBase(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health));
                     break;
                     case "Airport":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new Airport(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new Airport(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health));
                     break;
                     case "Port":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new Port(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new Port(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health));
                     break;
                     case "HQ":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new HQ(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new HQ(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health));
                     break;
                     case "Building":
-                    grid.SetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z, new Building(grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z), tilemapObjectSaveObject.team, tilemapObjectSaveObject.health));
+                    grid.SetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z, new Building(grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z), TileTypeSaveObject.team, TileTypeSaveObject.health));
                     break;
                     default:
                     break;
                 }
-                TilemapObject tilemapObject = grid.GetGridObject(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z);
-                tilemapObject.Load(tilemapObjectSaveObject);
-                grid.TriggerGenericGridChanged(tilemapObjectSaveObject.x, tilemapObjectSaveObject.z);
+                TileType TileType = grid.GetGridObject(TileTypeSaveObject.x, TileTypeSaveObject.z);
+                TileType.Load(TileTypeSaveObject);
+                grid.TriggerGenericGridChanged(TileTypeSaveObject.x, TileTypeSaveObject.z);
             }
             OnLoaded?.Invoke(this, EventArgs.Empty);
         }
@@ -240,7 +240,7 @@ public class Tilemap
         }
     }
 
-    public GameGrid<TilemapObject> GetGrid()
+    public GameGrid<TileType> GetGrid()
     {
         return grid;
     }

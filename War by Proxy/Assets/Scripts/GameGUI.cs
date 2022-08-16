@@ -108,7 +108,7 @@ public class GameGUI : MonoBehaviourPunCallbacks
         if(unithealthright.activeSelf) unithealthright.SetActive(false);
     }
 
-    public void ShowExtendedInfo(TilemapObject tile, GameObject tileobject, Unit unit, GameObject unitObject)
+    public void ShowExtendedInfo(TileType tile, GameObject tileobject, Unit unit, GameObject unitObject)
     {
         Texture2D tilethumbnail = RuntimePreviewGenerator.GenerateModelPreview(tileobject.transform);
         Transform tiletypeinfo = tileinfo.transform.Find("TileTypeInfo");
@@ -358,9 +358,9 @@ public class GameGUI : MonoBehaviourPunCallbacks
         if(attackinfo.activeSelf) attackinfo.SetActive(false);
     }
 
-    public string CheckIncome(TilemapObject tile)
+    public string CheckIncome(TileType tile)
     {
-        if(tile.GetTilemapSprite() == TilemapObject.TilemapSprite.HQ)
+        if(tile.GetTilemapSprite() == TileType.TilemapSprite.HQ)
         {
             return "2000";
         }
@@ -371,17 +371,17 @@ public class GameGUI : MonoBehaviourPunCallbacks
         return "None";
     }
 
-    public string CheckRepair(TilemapObject tile)
+    public string CheckRepair(TileType tile)
     {
-        if(tile.GetType().IsSubclassOf(typeof(City)) || tile.GetTilemapSprite() == TilemapObject.TilemapSprite.HQ || tile.GetTilemapSprite() == TilemapObject.TilemapSprite.MilitaryBase)
+        if(tile.GetType().IsSubclassOf(typeof(City)) || tile.GetTilemapSprite() == TileType.TilemapSprite.HQ || tile.GetTilemapSprite() == TileType.TilemapSprite.MilitaryBase)
         {
             return "Ground";
         }
-        if(tile.GetTilemapSprite() == TilemapObject.TilemapSprite.Airport)
+        if(tile.GetTilemapSprite() == TileType.TilemapSprite.Airport)
         {
             return "Air";
         }
-        if(tile.GetTilemapSprite() == TilemapObject.TilemapSprite.Port)
+        if(tile.GetTilemapSprite() == TileType.TilemapSprite.Port)
         {
             return "Sea";
         }

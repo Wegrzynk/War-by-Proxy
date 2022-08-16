@@ -27,6 +27,7 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
         waitingRoomWindow.SetActive(true);
         waitingRoomWindow.GetComponent<WaitingRoomWindow>().Init();
         waitingRoomWindow.transform.Find("confirmButton").gameObject.SetActive(false);
+        waitingRoomWindow.transform.Find("returnButton").GetComponent<Button>().interactable = true;
         waitingRoomWindow.GetComponent<Animation>().Play("SwipeIn");
         this.gameObject.SetActive(false);
     }
@@ -98,11 +99,13 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
 
     public void EnterRoom(int index, RoomInfo room)
     {
+        this.transform.Find("returnButton").GetComponent<Button>().interactable = false;
         ExitGames.Client.Photon.Hashtable myCustomProperties = new ExitGames.Client.Photon.Hashtable();
         myCustomProperties["Index"] = index;
         myCustomProperties["ShowGrid"] = menuManager.GetComponent<MenuManager>().showgrid;
         PhotonNetwork.SetPlayerCustomProperties(myCustomProperties);
         PhotonNetwork.JoinRoom(room.Name);
+        ClearList();
     }
 
     public override void OnJoinedRoom()
@@ -114,5 +117,7 @@ public class RoomListWindow : MonoBehaviourPunCallbacks
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         Debug.LogError("Joining room failed. " + message);
+        ClearList();
+        InitRoomsList();
     }
 }

@@ -36,6 +36,10 @@ public class MenuManager : MonoBehaviourPunCallbacks
 
     IEnumerator Hold1(GameObject window)
     {
+        foreach(Transform deinteractable in window.transform)
+        {
+            if(deinteractable.tag == "DefaultMenuButton") deinteractable.GetComponent<Button>().interactable = false;
+        }
         window.GetComponent<Animation>().Play("SwipeAway");
         yield return new WaitForSeconds(window.GetComponent<Animation>()["SwipeAway"].length);
         window.SetActive(false);
@@ -46,10 +50,18 @@ public class MenuManager : MonoBehaviourPunCallbacks
         yield return new WaitForSeconds(window.GetComponent<Animation>()["SwipeIn"].length);
         window.SetActive(true);
         window.GetComponent<Animation>().Play("SwipeIn");
+        foreach(Transform deinteractable in window.transform)
+        {
+            if(deinteractable.tag == "DefaultMenuButton") deinteractable.GetComponent<Button>().interactable = true;
+        }
     }
 
     IEnumerator Hold3(GameObject window)
     {
+        foreach(Transform deinteractable in window.transform)
+        {
+            if(deinteractable.tag == "DefaultMenuButton") deinteractable.GetComponent<Button>().interactable = false;
+        }
         window.GetComponent<Animation>().Play("SwipeAway2");
         yield return new WaitForSeconds(window.GetComponent<Animation>()["SwipeAway2"].length);
         window.SetActive(false);
@@ -60,6 +72,10 @@ public class MenuManager : MonoBehaviourPunCallbacks
         yield return new WaitForSeconds(window.GetComponent<Animation>()["SwipeIn2"].length);
         window.SetActive(true);
         window.GetComponent<Animation>().Play("SwipeIn2");
+        foreach(Transform deinteractable in window.transform)
+        {
+            if(deinteractable.tag == "DefaultMenuButton") deinteractable.GetComponent<Button>().interactable = true;
+        }
     }
 
     IEnumerator Fade1(GameObject window)
@@ -106,6 +122,15 @@ public class MenuManager : MonoBehaviourPunCallbacks
             resolutionsDropdown.value = resolutionOption;
             resolutionsDropdown.RefreshShownValue();
         }
+        
+        foreach(GameObject deinteractable in GameObject.FindGameObjectsWithTag("DefaultMenuButton"))
+        {
+            if(deinteractable.tag == "DefaultMenuButton") deinteractable.GetComponent<Button>().interactable = false;
+        }
+        foreach(Transform deinteractable in mainMenuWindow.transform)
+        {
+            if(deinteractable.tag == "DefaultMenuButton") deinteractable.GetComponent<Button>().interactable = true;
+        }
     }
 
     public void SetMasterVolume(float volume)
@@ -143,6 +168,22 @@ public class MenuManager : MonoBehaviourPunCallbacks
         fullscreenOption = PlayerPrefs.GetInt("fullscreen", 1);
         showgridOption = PlayerPrefs.GetInt("showgrid", 0);
         volumeOption = PlayerPrefs.GetFloat("volume", -40f);
+    }
+
+    public void DeactivateOptions()
+    {
+        resolutionsDropdown.interactable = false;
+        optionsWindow.transform.Find("fullscreenCheckmarkPanel").Find("checkmarkButton").GetComponent<Toggle>().interactable = false;
+        optionsWindow.transform.Find("showGridCheckmarkPanel").Find("checkmarkButton").GetComponent<Toggle>().interactable = false;
+        masterSlider.interactable = false;
+    }
+
+    public void ReactivateOptions()
+    {
+        resolutionsDropdown.interactable = true;
+        optionsWindow.transform.Find("fullscreenCheckmarkPanel").Find("checkmarkButton").GetComponent<Toggle>().interactable = true;
+        optionsWindow.transform.Find("showGridCheckmarkPanel").Find("checkmarkButton").GetComponent<Toggle>().interactable = true;
+        masterSlider.interactable = true;
     }
 
     public void QuitGame()
@@ -253,6 +294,7 @@ public class MenuManager : MonoBehaviourPunCallbacks
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
         Debug.LogError("Room creation failed. " + message);
+        playersEditorWindow.GetComponent<PlayersEditorWindow>().ReactivateSettings();
     }
 
     public override void OnJoinedLobby()

@@ -38,6 +38,10 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
 
     public void Init()
     {
+        if(PhotonNetwork.CurrentRoom.PlayerCount != PhotonNetwork.CurrentRoom.MaxPlayers)
+        {
+            this.gameObject.transform.Find("confirmButton").GetComponent<Button>().interactable = false;
+        }
         GetCurrentRoomPlayers();
         mapDisplay.GetComponent<Text>().text = PhotonNetwork.CurrentRoom.CustomProperties["MapName"].ToString();
         InitPlayers();
@@ -59,6 +63,14 @@ public class WaitingRoomWindow : MonoBehaviourPunCallbacks
             Destroy(panel);
         }
         PlayersDisplay();
+        if(PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
+        {
+            this.gameObject.transform.Find("confirmButton").GetComponent<Button>().interactable = true;
+        }
+        else
+        {
+            this.gameObject.transform.Find("confirmButton").GetComponent<Button>().interactable = false;
+        }
     }
 
     public void PlayersDisplay()

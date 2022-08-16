@@ -22,7 +22,7 @@ public class Player
         {
             for(int z = 0; z < tilemap.GetGrid().GetHeight(); z++)
             {
-                TilemapObject tileHelp = tilemap.GetGrid().GetGridObject(x, z);
+                TileType tileHelp = tilemap.GetGrid().GetGridObject(x, z);
                 if(tileHelp.GetType().IsSubclassOf(typeof(Building)) && ((Building)tileHelp).GetTeam() == team)
                 {
                     ownedBuildings.Add((Building)tileHelp);

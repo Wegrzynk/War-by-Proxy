@@ -10,11 +10,11 @@ public class BuildingButtonHover : MonoBehaviour, IPointerEnterHandler, IPointer
 {
     public GameObject canvas;
     public City cityupgrade;
-    private Dictionary<TilemapObject.TilemapSprite, string> descriptions = new Dictionary<TilemapObject.TilemapSprite, string>
+    private Dictionary<TileType.TilemapSprite, string> descriptions = new Dictionary<TileType.TilemapSprite, string>
     {
-        { TilemapObject.TilemapSprite.Radio, "Indirect attack units stationed on this building receive +1 max attack range" },
-        { TilemapObject.TilemapSprite.Lab, "Allows any unit ending its turn on this building and selecting proper action to be upgraded once per turn, up to 3 upgrades. Each upgrade provides addition +10% attack power" },
-        { TilemapObject.TilemapSprite.Outpost, "Has terrain defense of 4, which is an additional defense point from regular city's 3 defense points" }
+        { TileType.TilemapSprite.Radio, "Indirect attack units stationed on this building receive +1 max attack range" },
+        { TileType.TilemapSprite.Lab, "Allows any unit ending its turn on this building and selecting proper action to be upgraded once per turn, up to 3 upgrades. Each upgrade provides addition +10% attack power" },
+        { TileType.TilemapSprite.Outpost, "Has terrain defense of 4, which is an additional defense point from regular city's 3 defense points" }
     };
 
     public void OnPointerEnter(PointerEventData eventData)

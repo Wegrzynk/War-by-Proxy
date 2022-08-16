@@ -4,10 +4,11 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
+using Photon.Realtime;
 
-public class GameManager : MonoBehaviourPun
+public class GameManager : MonoBehaviourPunCallbacks
 {
-    public TilemapObject[] tileTypes;
+    public TileType[] tileTypes;
     public Unit[] unitTypes;
     public List<Unit> militaryBaseRecruits;
     public List<Unit> airportRecruits;
@@ -18,10 +19,9 @@ public class GameManager : MonoBehaviourPun
     public TurnSystem localTurnSystem = new TurnSystem();
     public GameObject canvas;
     public GameObject selectedTile;
-    public GameObject list;
-    public GameObject listContent;
     public GameObject mapButtonPrefab;
     public GameObject visibleGridPrefab;
+    public GameObject turnIndicator;
     public int[,] damageMatrix;
     int mapSizeX;
     int mapSizeZ;
@@ -46,7 +46,6 @@ public class GameManager : MonoBehaviourPun
     private int creatorSelector = 0;
     private string unitSelected = "false";
     private bool menuUp = false;
-    private PathFinding pathfinding;
     private PathMaking pathmaking;
     private Tilemap tilemap;
     private Unitmap unitmap;
@@ -110,12 +109,12 @@ public class GameManager : MonoBehaviourPun
     }
 
     [PunRPC]
-    public void UpgradeCity(TilemapObject.TilemapSprite upgrade, int x, int z, Vector3 pos, int team)
+    public void UpgradeCity(TileType.TilemapSprite upgrade, int x, int z, Vector3 pos, int team)
     {
         playersInMatch[turnCounter].RemoveBuilding((Building)tilemap.GetGrid().GetGridObject(x, z));
         tilemap.SetTilemapSprite(pos, upgrade, team);
-        TilemapObject tileObject = tilemap.GetGrid().GetGridObject(x, z);
-        TilemapObject ttm = tileTypes[(int)upgrade];
+        TileType tileObject = tilemap.GetGrid().GetGridObject(x, z);
+        TileType ttm = tileTypes[(int)upgrade];
         GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, pos, Quaternion.identity, map);
         tileInstance.name = tileObject.ToString() + x + z;
         tileObject.setTileVisual(tileInstance);
@@ -232,8 +231,8 @@ public class GameManager : MonoBehaviourPun
                     {
                         Instantiate(visibleGridPrefab, new Vector3(x * 2 - 1, 0, z * 2 - 1), Quaternion.identity, map);
                     }
-                    TilemapObject tileObject = tilemap.GetGrid().GetGridObject(x, z);
-                    TilemapObject tt = tileTypes[tilemap.GetIntFromSprite(x, z)];
+                    TileType tileObject = tilemap.GetGrid().GetGridObject(x, z);
+                    TileType tt = tileTypes[tilemap.GetIntFromSprite(x, z)];
                     GameObject tileInstance = Instantiate(tt.tileVisualPrefab, new Vector3(x * 2, 0, z * 2), Quaternion.identity, map);
                     tileInstance.name = tileObject.ToString() + x + z;
                     tileObject.setTileVisual(tileInstance);
@@ -314,11 +313,11 @@ public class GameManager : MonoBehaviourPun
         photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, x, z);
 
         Transform localtile = GameObject.Find(tilemap.GetGrid().GetGridObject(x, z).ToString() + x + z).transform;
-        TilemapObject tileChecker = tilemap.GetGrid().GetGridObject(x, z);
+        TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
         Unit unitChecker = unitmap.GetGrid().GetGridObject(x, z);
         int possibleloser = -1;
         string oldtile = tileChecker.ToString() + x + z;
-        if(unitChecker != null && !(tileChecker.GetType().Equals(typeof(TilemapObject))) && unitChecker.GetTeam() != ((Building)tileChecker).GetTeam())
+        if(unitChecker != null && !(tileChecker.GetType().Equals(typeof(TileType))) && unitChecker.GetTeam() != ((Building)tileChecker).GetTeam())
         {
             Building helper = (Building)tileChecker;
             helper.SetHealth(helper.GetHealth() - unitChecker.GetHealth());
@@ -327,11 +326,11 @@ public class GameManager : MonoBehaviourPun
                 if(helper.GetTeam() != 0) playersInMatch[helper.GetTeam()-1].RemoveBuilding(helper);
                 if(tileChecker.GetType().Equals(typeof(HQ)))
                 {
-                    helper.SetTilemapSprite(TilemapObject.TilemapSprite.City);
+                    helper.SetTilemapSprite(TileType.TilemapSprite.City);
                     possibleloser = helper.GetTeam()-1;
                 }
                 helper.SetTeam(unitChecker.GetTeam());
-                TilemapObject ttm = tileTypes[tilemap.GetIntFromSprite(x, z)];
+                TileType ttm = tileTypes[tilemap.GetIntFromSprite(x, z)];
                 GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, localtile.position, Quaternion.identity, map);
                 tileInstance.name = tileChecker.ToString() + x + z;
                 tileChecker.setTileVisual(tileInstance);
@@ -423,7 +422,7 @@ public class GameManager : MonoBehaviourPun
         {
             Destroy(selected);
         }
-        foreach(TilemapObject tile in tilemap.GetNeighbouringTiles(x, z, unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[index], unitmap))
+        foreach(TileType tile in tilemap.GetNeighbouringTiles(x, z, unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[index], unitmap))
         {
             selectedTiles.Add(Instantiate(selectedTile, new Vector3(tile.GetX() * 2, 0.1f, tile.GetZ() * 2), Quaternion.identity, map));
         }
@@ -523,11 +522,11 @@ public class GameManager : MonoBehaviourPun
         {
             destroyBuilding.SetTeam(0);
             RPCDestroy(destroyBuilding.ToString() + destroyBuilding.GetX() + destroyBuilding.GetZ());
-            if(destroyBuilding.GetTilemapSprite() == TilemapObject.TilemapSprite.HQ || destroyBuilding.GetType().IsSubclassOf(typeof(City)))
+            if(destroyBuilding.GetTilemapSprite() == TileType.TilemapSprite.HQ || destroyBuilding.GetType().IsSubclassOf(typeof(City)))
             {
-                destroyBuilding.SetTilemapSprite(TilemapObject.TilemapSprite.City);
+                destroyBuilding.SetTilemapSprite(TileType.TilemapSprite.City);
             }
-            TilemapObject ttm = tileTypes[tilemap.GetIntFromSprite(destroyBuilding.GetX(), destroyBuilding.GetZ())];
+            TileType ttm = tileTypes[tilemap.GetIntFromSprite(destroyBuilding.GetX(), destroyBuilding.GetZ())];
             GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, tilemap.GetGrid().GetWorldPosition(destroyBuilding.GetX(), destroyBuilding.GetZ()), Quaternion.identity, map);
             tileInstance.name = destroyBuilding.ToString() + destroyBuilding.GetX() + destroyBuilding.GetZ();
             tilemap.GetGrid().GetGridObject(destroyBuilding.GetX(), destroyBuilding.GetZ()).setTileVisual(tileInstance);
@@ -544,7 +543,7 @@ public class GameManager : MonoBehaviourPun
         {
             for (int x = 0; x < mapSizeX; x++)
             {
-                if(tilemap.GetGrid().GetGridObject(x, z).GetTilemapSprite() == TilemapObject.TilemapSprite.HQ && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() != localPlayerID + 1)
+                if(tilemap.GetGrid().GetGridObject(x, z).GetTilemapSprite() == TileType.TilemapSprite.HQ && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() != localPlayerID + 1)
                 {
                     victory = false;
                 }
@@ -555,6 +554,21 @@ public class GameManager : MonoBehaviourPun
             canvas.GetComponent<GameGUI>().ShowGameEndDialog(victory);
             menuUp = true;
         }
+    }
+
+    public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
+    {
+        RemovePlayerFromGame((int)otherPlayer.CustomProperties["Index"]);
+        CheckVictoryConditions();
+    }
+
+    public bool CheckAlliance(int player1, int player2)
+    {
+        if(player1 == 0 || player2 == 0) return false;
+        int team1 = ((int[])PhotonNetwork.CurrentRoom.CustomProperties["Alliances"])[player1-1];
+        int team2 = ((int[])PhotonNetwork.CurrentRoom.CustomProperties["Alliances"])[player2-1];
+        if(team1 != 0 && team2 != 0 && team1 == team2) return true;
+        return false;
     }
 
     [PunRPC]
@@ -594,7 +608,7 @@ public class GameManager : MonoBehaviourPun
     [PunRPC]
     private void SynchronizeCapture(int x, int z, Vector3 pos, string tilename)
     {
-        TilemapObject tileChecker = tilemap.GetGrid().GetGridObject(x, z);
+        TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
         Unit unitChecker = unitmap.GetGrid().GetGridObject(x, z);
         Building helper = (Building)tileChecker;
         helper.SetHealth(helper.GetHealth() - unitChecker.GetHealth());
@@ -603,10 +617,10 @@ public class GameManager : MonoBehaviourPun
             if(helper.GetTeam() != 0) playersInMatch[helper.GetTeam()-1].RemoveBuilding(helper);
             if(tileChecker.GetType().Equals(typeof(HQ)))
             {
-                helper.SetTilemapSprite(TilemapObject.TilemapSprite.City);
+                helper.SetTilemapSprite(TileType.TilemapSprite.City);
             }
             helper.SetTeam(unitChecker.GetTeam());
-            TilemapObject ttm = tileTypes[tilemap.GetIntFromSprite(x, z)];
+            TileType ttm = tileTypes[tilemap.GetIntFromSprite(x, z)];
             GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, pos, Quaternion.identity, map);
             tileInstance.name = tileChecker.ToString() + x + z;
             tileChecker.setTileVisual(tileInstance);
@@ -802,7 +816,7 @@ public class GameManager : MonoBehaviourPun
                     if (0 <= builder && builder <= 7)
                     {
                         tilemap.SetTilemapSprite(tile.position, builder, currentPlacer);
-                        TilemapObject ttm = tileTypes[builder];
+                        TileType ttm = tileTypes[builder];
                         GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, tile.position, Quaternion.identity, map);
                         tileInstance.name = tilemap.GetGrid().GetGridObject(x, z).ToString() + x + z;
                         tilemap.GetGrid().GetGridObject(x, z).setTileVisual(tileInstance);
@@ -811,8 +825,8 @@ public class GameManager : MonoBehaviourPun
                     else if (8 <= builder && builder <= 15)
                     {
                         tilemap.SetTilemapSprite(tile.position, builder, currentPlacer);
-                        TilemapObject tileObject = tilemap.GetGrid().GetGridObject(x, z);
-                        TilemapObject ttm = tileTypes[builder];
+                        TileType tileObject = tilemap.GetGrid().GetGridObject(x, z);
+                        TileType ttm = tileTypes[builder];
                         GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, tile.position, Quaternion.identity, map);
                         tileInstance.name = tileObject.ToString() + x + z;
                         tileObject.setTileVisual(tileInstance);
@@ -890,6 +904,7 @@ public class GameManager : MonoBehaviourPun
         {
             if (localPlayerID == turnCounter)
             {
+                if (turnIndicator.activeSelf == false) turnIndicator.SetActive(true);
                 if (Input.GetMouseButtonDown(0) && unitSelected == "move")
                 {
                     if (MouseClickDetector(ref x, ref z, ref tile))
@@ -911,17 +926,18 @@ public class GameManager : MonoBehaviourPun
                                 if(unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() == 0 && unitmap.GetGrid().GetGridObject(x, z).GetCurrentAmmo() > 0)
                                 {
                                     targetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio))));
+                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio)), this));
                                     if(targetables.Count > 1) actionfire = true;
                                 }
-                                else if(graph[0].x == x && graph[0].z == z && unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() > 0)
+                                else if(graph[0].x == x && graph[0].z == z && unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() > 0 && unitmap.GetGrid().GetGridObject(x, z).GetCurrentAmmo() > 0)
                                 {
                                     targetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio))));
+                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio)), this));
                                     if(targetables.Count > 1) actionfire = true;
                                 }
                                 if(tilemap.GetGrid().GetGridObject(x, z).GetType().IsSubclassOf(typeof(Building)) 
                                 && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() != unitmap.GetGrid().GetGridObject(x, z).GetTeam()
+                                && !CheckAlliance(((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam(), unitmap.GetGrid().GetGridObject(x, z).GetTeam())
                                 && unitmap.GetGrid().GetGridObject(x, z).GetMovementType() == 0)
                                 {
                                     actioncapture = true;
@@ -1096,7 +1112,7 @@ public class GameManager : MonoBehaviourPun
                     targetables.Clear();
                     if (MouseClickDetector(ref x, ref z))
                     {
-                        TilemapObject tileChecker = tilemap.GetGrid().GetGridObject(x, z);
+                        TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
                         if(localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(x, z)))
                         {
                             graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false);
@@ -1191,12 +1207,14 @@ public class GameManager : MonoBehaviourPun
                             {
                                 selectedTiles.Add(Instantiate(selectedTile, new Vector3(graph[i].x * 2, 0.1f, graph[i].z * 2), Quaternion.identity, map));
                             }
+                            canvas.GetComponent<GameGUI>().HideAttackInfo();
                         }
                     }
                 }
             }
             else
             {
+                if (turnIndicator.activeSelf == true) turnIndicator.SetActive(false);
                 if(Input.GetMouseButtonDown(0) && menuUp == false && unitSelected == "false")
                 {
                     canvas.GetComponent<GameGUI>().quickmenu.SetActive(true);
@@ -1217,7 +1235,7 @@ public class GameManager : MonoBehaviourPun
                     currentguiside = "left";
                 }
                 canvas.GetComponent<GameGUI>().ShowPlayerInfo(currentguiside, teamColours, playersInMatch[localPlayerID], turnsPassed);
-                TilemapObject tileObject = tilemap.GetGrid().GetGridObject(x, z);
+                TileType tileObject = tilemap.GetGrid().GetGridObject(x, z);
                 canvas.GetComponent<GameGUI>().ShowTileInfo(currentguiside, tileObject.GetDefence(), tileObject.GetTileVisual());
                 if(unitmap.GetGrid().GetGridObject(x, z) != null)
                 {

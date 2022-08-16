@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [System.Serializable]
-public class TilemapObject
+public class TileType
 {
     public enum TilemapSprite
     {
@@ -23,7 +23,7 @@ public class TilemapObject
         Outpost
     }
 
-    protected internal GameGrid<TilemapObject> grid;
+    protected internal GameGrid<TileType> grid;
     protected internal int x;
     protected internal int z;
     [SerializeField] protected TilemapSprite tilemapSprite;
@@ -39,21 +39,21 @@ public class TilemapObject
     protected int movementPenaltyLander;
     protected int movementPenaltyAir;
 
-    public TilemapObject()
+    public TileType()
     {
         this.grid = null;
         this.x = 0;
         this.z = 0;
     }
 
-    public TilemapObject(GameGrid<TilemapObject> grid, int x, int z)
+    public TileType(GameGrid<TileType> grid, int x, int z)
     {
         this.grid = grid;
         this.x = x;
         this.z = z;
     }
 
-    public TilemapObject(TilemapObject tmo)
+    public TileType(TileType tmo)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -163,7 +163,7 @@ public class TilemapObject
     {
         return new SaveObject
         {
-            type = "TilemapObject",
+            type = "TileType",
             tilemapSprite = tilemapSprite,
             x = x,
             z = z,
@@ -180,7 +180,7 @@ public class TilemapObject
 }
 
 [System.Serializable]
-public class Building : TilemapObject
+public class Building : TileType
 {
     protected internal int team;
     protected internal int health;
@@ -194,7 +194,7 @@ public class Building : TilemapObject
         this.health = 0;
     }
 
-    public Building(GameGrid<TilemapObject> grid, int x, int z, int team, int health)
+    public Building(GameGrid<TileType> grid, int x, int z, int team, int health)
     {
         this.grid = grid;
         this.x = x;
@@ -203,7 +203,7 @@ public class Building : TilemapObject
         this.health = health;
     }
 
-    public Building(TilemapObject tmo, int team, int health)
+    public Building(TileType tmo, int team, int health)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -273,7 +273,7 @@ public class City : Building
         this.cost = 0;
     }
 
-    public City(GameGrid<TilemapObject> grid, int x, int z, int team, int health)
+    public City(GameGrid<TileType> grid, int x, int z, int team, int health)
     {
         this.grid = grid;
         this.x = x;
@@ -283,7 +283,7 @@ public class City : Building
         this.cost = 0;
     }
 
-    public City(TilemapObject tmo, int team, int health)
+    public City(TileType tmo, int team, int health)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -316,7 +316,7 @@ public class City : Building
 [System.Serializable]
 public class MilitaryBase : Building
 {
-    public MilitaryBase(GameGrid<TilemapObject> grid, int x, int z, int team, int health)
+    public MilitaryBase(GameGrid<TileType> grid, int x, int z, int team, int health)
     {
         this.grid = grid;
         this.x = x;
@@ -325,7 +325,7 @@ public class MilitaryBase : Building
         this.health = health;
     }
 
-    public MilitaryBase(TilemapObject tmo, int team, int health)
+    public MilitaryBase(TileType tmo, int team, int health)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -352,7 +352,7 @@ public class MilitaryBase : Building
 [System.Serializable]
 public class Airport : Building
 {
-    public Airport(GameGrid<TilemapObject> grid, int x, int z, int team, int health)
+    public Airport(GameGrid<TileType> grid, int x, int z, int team, int health)
     {
         this.grid = grid;
         this.x = x;
@@ -361,7 +361,7 @@ public class Airport : Building
         this.health = health;
     }
 
-    public Airport(TilemapObject tmo, int team, int health)
+    public Airport(TileType tmo, int team, int health)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -388,7 +388,7 @@ public class Airport : Building
 [System.Serializable]
 public class Port : Building
 {
-    public Port(GameGrid<TilemapObject> grid, int x, int z, int team, int health)
+    public Port(GameGrid<TileType> grid, int x, int z, int team, int health)
     {
         this.grid = grid;
         this.x = x;
@@ -397,7 +397,7 @@ public class Port : Building
         this.health = health;
     }
 
-    public Port(TilemapObject tmo, int team, int health)
+    public Port(TileType tmo, int team, int health)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -424,7 +424,7 @@ public class Port : Building
 [System.Serializable]
 public class HQ : Building
 {
-    public HQ(GameGrid<TilemapObject> grid, int x, int z, int team, int health)
+    public HQ(GameGrid<TileType> grid, int x, int z, int team, int health)
     {
         this.grid = grid;
         this.x = x;
@@ -433,7 +433,7 @@ public class HQ : Building
         this.health = health;
     }
 
-    public HQ(TilemapObject tmo, int team, int health)
+    public HQ(TileType tmo, int team, int health)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -460,7 +460,7 @@ public class HQ : Building
 [System.Serializable]
 public class Radio : City
 {
-    public Radio(GameGrid<TilemapObject> grid, int x, int z, int team, int health, int cost)
+    public Radio(GameGrid<TileType> grid, int x, int z, int team, int health, int cost)
     {
         this.grid = grid;
         this.x = x;
@@ -470,7 +470,7 @@ public class Radio : City
         this.cost = cost;
     }
 
-    public Radio(TilemapObject tmo, int team, int health, int cost)
+    public Radio(TileType tmo, int team, int health, int cost)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -498,7 +498,7 @@ public class Radio : City
 [System.Serializable]
 public class Lab : City
 {
-    public Lab(GameGrid<TilemapObject> grid, int x, int z, int team, int health, int cost)
+    public Lab(GameGrid<TileType> grid, int x, int z, int team, int health, int cost)
     {
         this.grid = grid;
         this.x = x;
@@ -508,7 +508,7 @@ public class Lab : City
         this.cost = cost;
     }
 
-    public Lab(TilemapObject tmo, int team, int health, int cost)
+    public Lab(TileType tmo, int team, int health, int cost)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;
@@ -536,7 +536,7 @@ public class Lab : City
 [System.Serializable]
 public class Outpost : City
 {
-    public Outpost(GameGrid<TilemapObject> grid, int x, int z, int team, int health, int cost)
+    public Outpost(GameGrid<TileType> grid, int x, int z, int team, int health, int cost)
     {
         this.grid = grid;
         this.x = x;
@@ -546,7 +546,7 @@ public class Outpost : City
         this.cost = cost;
     }
 
-    public Outpost(TilemapObject tmo, int team, int health, int cost)
+    public Outpost(TileType tmo, int team, int health, int cost)
     {
         this.grid = tmo.grid;
         this.x = tmo.x;

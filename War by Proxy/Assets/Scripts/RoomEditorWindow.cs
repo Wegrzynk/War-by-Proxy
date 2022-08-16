@@ -64,6 +64,7 @@ public class RoomEditorWindow : MonoBehaviour
 
     IEnumerator ScrollLeft()
     {
+        DeactivateButtons();
         float animLength = this.gameObject.GetComponent<Animation>()["ModeScrollLeft"].length;
         this.gameObject.GetComponent<Animation>().Play("ModeScrollLeft");
         yield return new WaitForSeconds(animLength);
@@ -71,6 +72,7 @@ public class RoomEditorWindow : MonoBehaviour
         PrintMaps(selectedIndex);
         MapShow(maps[selectedIndex][0]);
         ShowDescription(selectedIndex);
+        ReactivateButtons();
     }
 
     public void GameModesScrollLeft()
@@ -87,6 +89,7 @@ public class RoomEditorWindow : MonoBehaviour
 
     IEnumerator ScrollRight()
     {
+        DeactivateButtons();
         float animLength = this.gameObject.GetComponent<Animation>()["ModeScrollRight"].length;
         this.gameObject.GetComponent<Animation>().Play("ModeScrollRight");
         yield return new WaitForSeconds(animLength);
@@ -94,6 +97,46 @@ public class RoomEditorWindow : MonoBehaviour
         PrintMaps(selectedIndex);
         MapShow(maps[selectedIndex][0]);
         ShowDescription(selectedIndex);
+        ReactivateButtons();
+    }
+
+    public void DeactivateButtons()
+    {
+        this.transform.Find("gameModesList").Find("goRight").GetComponent<Button>().interactable = false;
+        this.transform.Find("gameModesList").Find("goLeft").GetComponent<Button>().interactable = false;
+        this.transform.Find("returnButton").GetComponent<Button>().interactable = false;
+        this.transform.Find("confirmButton").GetComponent<Button>().interactable = false;
+        DeactivateMaps();
+    }
+
+    public void DeactivateMaps()
+    {
+        if(mapsListContent.transform.childCount > 0)
+        {
+            foreach(Transform child in mapsListContent.transform)
+            {
+                child.GetComponent<Button>().interactable = false;
+            }
+        }
+    }
+
+    public void ReactivateButtons()
+    {
+        this.transform.Find("gameModesList").Find("goRight").GetComponent<Button>().interactable = true;
+        this.transform.Find("gameModesList").Find("goLeft").GetComponent<Button>().interactable = true;
+        this.transform.Find("returnButton").GetComponent<Button>().interactable = true;
+        this.transform.Find("confirmButton").GetComponent<Button>().interactable = true;
+    }
+
+    public void ReactivateMaps()
+    {
+        if(mapsListContent.transform.childCount > 0)
+        {
+            foreach(Transform child in mapsListContent.transform)
+            {
+                child.GetComponent<Button>().interactable = true;
+            }
+        }
     }
 
     public void PrintModes()

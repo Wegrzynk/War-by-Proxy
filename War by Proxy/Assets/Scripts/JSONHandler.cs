@@ -73,7 +73,7 @@ public class JSONHandler
     [System.Serializable]
     public class TerrainArray
     {
-        public TilemapObject.TilemapSprite tilemapSprite;
+        public TileType.TilemapSprite tilemapSprite;
         public int defenceRating;
         public int movementPenaltyFoot;
         public int movementPenaltyThreads;
@@ -177,7 +177,7 @@ public class JSONHandler
         }
     }
 
-    public static TerrainArray ReadTerrainChart(string fileName, TilemapObject.TilemapSprite typeSet)
+    public static TerrainArray ReadTerrainChart(string fileName, TileType.TilemapSprite typeSet)
     {
         Init();
         if (File.Exists(SAVE_FOLDER + fileName + "." + SAVE_EXTENSION))
