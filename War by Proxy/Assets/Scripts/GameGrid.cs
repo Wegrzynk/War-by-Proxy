@@ -111,7 +111,6 @@ public class GameGrid<GenericGrid>
         {
             gridArray[x, z] = value;
             if (OnGenericGridChanged != null) OnGenericGridChanged(this, new OnGenericGridChangedEventArgs { x = x, z = z });
-            //debugTextArray[x, z].text = gridArray[x, z].ToString();
         }
     }
 

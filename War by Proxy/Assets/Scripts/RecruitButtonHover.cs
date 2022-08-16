@@ -15,7 +15,7 @@ public class RecruitButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerE
         Transform unitinfo = canvas.transform.Find("RecruitMenu").Find("UnitInfo");
         unitinfo.Find("UI_Title").Find("Text").GetComponent<TextMeshProUGUI>().text = "Unit: " + unit.ToString();
         unitinfo.Find("UI_Icon").Find("Image").GetComponent<Image>().sprite = Sprite.Create(unitthumbnail, new Rect(0.0f, 0.0f, unitthumbnail.width, unitthumbnail.height), new Vector2(0.5f, 0.5f), 100f);
-        unitinfo.Find("UI_Health").Find("Text").GetComponent<TextMeshProUGUI>().text = "Health: " + unit.GetHealth();
+        unitinfo.Find("UI_Health").Find("Text").GetComponent<TextMeshProUGUI>().text = "Health: 100";
         unitinfo.Find("UI_Movement").Find("Text").GetComponent<TextMeshProUGUI>().text = "Movement: " + unit.GetStringFromMovementType() + " " + unit.GetMovementDistance();
         unitinfo.Find("UI_Vision").Find("Text").GetComponent<TextMeshProUGUI>().text = "Vision: " + unit.GetVision();
         unitinfo.Find("UI_Fuel").Find("Text").GetComponent<TextMeshProUGUI>().text = "Fuel/Rations: " + unit.GetCurrentFuel() + "/" + unit.GetFuel();

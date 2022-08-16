@@ -566,7 +566,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         bool viable = false;
         foreach(Player playa in playersInMatch)
         {
-            Debug.Log(playa.GetTeam() + "=?=" + leavingPlayerTeam + ", victorystatus: " + playa.GetVictoryStatus());
             if(playa.GetTeam() == leavingPlayerTeam && !playa.GetVictoryStatus()) viable = true;
         }
         if(viable)
@@ -981,7 +980,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                                         }
                                     }
                                 }
-                                if(unitmap.GetGrid().GetGridObject(x, z).GetLoadCapacity() != 0 /*&& unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[0] != null*/)
+                                if(unitmap.GetGrid().GetGridObject(x, z).GetLoadCapacity() != 0)
                                 {
                                     unloadactions = new bool[unitmap.GetGrid().GetGridObject(x, z).GetLoadCapacity()];
                                     for(int i = 0; i < unitmap.GetGrid().GetGridObject(x, z).GetLoadCapacity(); i++)

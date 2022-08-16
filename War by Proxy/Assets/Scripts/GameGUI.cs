@@ -315,6 +315,8 @@ public class GameGUI : MonoBehaviourPunCallbacks
         {
             GameObject.Destroy(child.gameObject);
         }
+        recruitmenu.transform.Find("UnitInfo").gameObject.SetActive(false);
+        recruitmenu.transform.Find("NoUnitInfo").gameObject.SetActive(true);
         recruitmenu.SetActive(false);
     }
 
@@ -323,7 +325,6 @@ public class GameGUI : MonoBehaviourPunCallbacks
         foreach(City item in array)
         {
             GameObject buyableBuilding = Instantiate(recruitoptionprefab, buildingupgrademenu.transform.Find("BuildingShop").Find("ScrollView").Find("Viewport").Find("Content"));
-            //item.SetUnitType(item.GetUnitType(), team);
             item.setTileVisual(item.tileVisualPrefab);
             buyableBuilding.transform.Find("UnitName").GetComponent<TextMeshProUGUI>().text = item.ToString();
             buyableBuilding.transform.Find("UnitPrice").GetComponent<TextMeshProUGUI>().text = item.GetCost().ToString();
@@ -338,6 +339,8 @@ public class GameGUI : MonoBehaviourPunCallbacks
         {
             GameObject.Destroy(child.gameObject);
         }
+        buildingupgrademenu.transform.Find("BuildingInfo").gameObject.SetActive(false);
+        buildingupgrademenu.transform.Find("NoBuildingInfo").gameObject.SetActive(true);
         buildingupgrademenu.SetActive(false);
     }
 
