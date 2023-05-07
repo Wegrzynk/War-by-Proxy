@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using Photon.Pun;
-using Photon.Realtime;
 
-public class GameManager : MonoBehaviourPunCallbacks
+public class SinglePlayerManager : MonoBehaviour
 {
     public TileType[] tileTypes;
     public Unit[] unitTypes;
@@ -41,14 +39,15 @@ public class GameManager : MonoBehaviourPunCallbacks
     private int builder = -1;
     private int unitSetter = -1;
     private int currentPlacer = 0;
-    private int turnCounter = 0;
+    public int turnCounter = 0;
     private int turnsPassed = 1;
     private int creatorSelector = 0;
     private string unitSelected = "false";
     private bool menuUp = false;
-    private PathMaking pathmaking;
-    private Tilemap tilemap;
-    private Unitmap unitmap;
+    public PathMaking pathmaking;
+    public PathFinding pathfinding;
+    public Tilemap tilemap;
+    public Unitmap unitmap;
     List<DijkstraNode> graph = new List<DijkstraNode>();
     List<GameObject> selectedTiles = new List<GameObject>();
     List<Unit> targetables = new List<Unit>();
@@ -60,17 +59,17 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public void PrintListUnits(List<Unit> array, int x, int z, int team)
     {
-        canvas.GetComponent<GameGUI>().ShowRecruitInfo(array, x, z, team);
+        canvas.GetComponent<GameGUI>().SPShowRecruitInfo(array, x, z, team);
     }
 
     public void PrintListCityUpgrades(List<City> array, int x, int z, Transform tile, int team)
     {
-        canvas.GetComponent<GameGUI>().ShowBuildingUpgrades(array, x, z, tile, team);
+        canvas.GetComponent<GameGUI>().SPShowBuildingUpgrades(array, x, z, tile, team);
     }
 
     public void AddRecruitListeners(GameObject button, Unit unit, int x, int z, int team)
     {
-        button.GetComponent<Button>().onClick.AddListener(() => photonView.RPC("RecruitUnit", RpcTarget.All, unit.GetUnitType(), x, z, team));
+        button.GetComponent<Button>().onClick.AddListener(() => RecruitUnit(unit.GetUnitType(), x, z, team));
         button.GetComponent<Button>().onClick.AddListener(() => CloseMenu());
         button.GetComponent<Button>().onClick.AddListener(() => canvas.GetComponent<GameGUI>().HideRecruitInfo());
         RecruitButtonHover component = button.AddComponent<RecruitButtonHover>();
@@ -81,8 +80,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public void AddBuildingListeners(GameObject button, City cityupgrade, int x, int z, Transform tile, int team)
     {
-        button.GetComponent<Button>().onClick.AddListener(() => photonView.RPC("UpgradeCity", RpcTarget.All, cityupgrade.GetTilemapSprite(), x, z, tile.position, team));
-        button.GetComponent<Button>().onClick.AddListener(() => photonView.RPC("RPCDestroy", RpcTarget.All, tile.gameObject.name));
+        button.GetComponent<Button>().onClick.AddListener(() => UpgradeCity(cityupgrade.GetTilemapSprite(), x, z, tile.position, team));
+        button.GetComponent<Button>().onClick.AddListener(() => RPCDestroy(tile.gameObject.name));
         button.GetComponent<Button>().onClick.AddListener(() => CloseMenu());
         button.GetComponent<Button>().onClick.AddListener(() => canvas.GetComponent<GameGUI>().HideBuildingUpgrades());
         BuildingButtonHover component = button.AddComponent<BuildingButtonHover>();
@@ -91,13 +90,11 @@ public class GameManager : MonoBehaviourPunCallbacks
         if(playersInMatch[localPlayerID].GetFunds() < ((City)cityupgrade).GetCost()) button.GetComponent<Button>().interactable = false;
     }
 
-    [PunRPC]
     public void RPCDestroy(string objectname)
     {
         Destroy(GameObject.Find(objectname));
     }
 
-    [PunRPC]
     public void RecruitUnit(Unit.UnitType type, int x, int z, int team)
     {
         Unit un = unitTypes[(int)type];
@@ -108,7 +105,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         playersInMatch[turnCounter].ChangeFunds(-(unitmap.GetGrid().GetGridObject(x, z).GetCost()));
     }
 
-    [PunRPC]
     public void UpgradeCity(TileType.TilemapSprite upgrade, int x, int z, Vector3 pos, int team)
     {
         playersInMatch[turnCounter].RemoveBuilding((Building)tilemap.GetGrid().GetGridObject(x, z));
@@ -176,7 +172,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         menuUp = false;
     }
 
-    private void UnitInstantiate(Unit un, int x, int z, int colorID)
+    public void UnitInstantiate(Unit un, int x, int z, int colorID)
     {
         GameObject unitInstance;
         if(un.unitVisualPrefab != null) 
@@ -195,9 +191,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         damageMatrix = JSONHandler.ReadDamageMatrix("damageChart");
-        localPlayerID = (int)PhotonNetwork.LocalPlayer.CustomProperties["Index"];
-        mapSizeX = (int)PhotonNetwork.CurrentRoom.CustomProperties["Width"];
-        mapSizeZ = (int)PhotonNetwork.CurrentRoom.CustomProperties["Height"];
+        localPlayerID = 0;
+        mapSizeX = 16;
+        mapSizeZ = 14;
         mainCamera.position = new Vector3(mapSizeX - 1, 18, mapSizeZ - 16);
         if(debugMode == 3)
         {
@@ -210,27 +206,28 @@ public class GameManager : MonoBehaviourPunCallbacks
             unitmap = new Unitmap(mapSizeX, mapSizeZ, 2f, Vector3.zero);
             tilemap = new Tilemap(mapSizeX, mapSizeZ, 2f, Vector3.zero);
             pathmaking = new PathMaking(mapSizeX, mapSizeZ);
+            pathfinding = new PathFinding(mapSizeX, mapSizeZ);
             GenerateMapVisual();
         }
         InitPlayers();
-        canvas.GetComponent<GameGUI>().quickmenu.transform.Find("QuickMenuOverView").GetComponent<Button>().onClick.AddListener(() => canvas.GetComponent<GameGUI>().ShowMatchOverview(teamColours));
-        canvas.GetComponent<GameGUI>().yieldconfirmation.transform.Find("ConfirmButton").GetComponent<Button>().onClick.AddListener(() => photonView.RPC("GameLost", PhotonNetwork.LocalPlayer, localPlayerID));
+        canvas.GetComponent<GameGUI>().quickmenu.transform.Find("QuickMenuOverView").GetComponent<Button>().onClick.AddListener(() => canvas.GetComponent<GameGUI>().SPShowMatchOverview(teamColours));
+        canvas.GetComponent<GameGUI>().yieldconfirmation.transform.Find("ConfirmButton").GetComponent<Button>().onClick.AddListener(() => GameLost(localPlayerID));
     }
 
     void GenerateMapVisual()
     {
         if (debugMode == 3 || debugMode == 4)
         {
-            tilemap.Load((string)PhotonNetwork.CurrentRoom.CustomProperties["MapName"] + "_Tiles");
-            unitmap.Load((string)PhotonNetwork.CurrentRoom.CustomProperties["MapName"] + "_Units");
+            tilemap.Load("Islander_Tiles");
+            unitmap.Load("Islander_Units");
             for (int z = 0; z < mapSizeZ; z++)
             {
                 for (int x = 0; x < mapSizeX; x++)
                 {
-                    if((bool)PhotonNetwork.LocalPlayer.CustomProperties["ShowGrid"])
+                    /*if((bool)PhotonNetwork.LocalPlayer.CustomProperties["ShowGrid"])
                     {
                         Instantiate(visibleGridPrefab, new Vector3(x * 2 - 1, 0, z * 2 - 1), Quaternion.identity, map);
-                    }
+                    }*/
                     TileType tileObject = tilemap.GetGrid().GetGridObject(x, z);
                     TileType tt = tileTypes[tilemap.GetIntFromSprite(x, z)];
                     GameObject tileInstance = Instantiate(tt.tileVisualPrefab, new Vector3(x * 2, 0, z * 2), Quaternion.identity, map);
@@ -262,7 +259,6 @@ public class GameManager : MonoBehaviourPunCallbacks
             unitmap.GetGrid().GetGridObject(x, z).FuelCost(Mathf.Abs(graph[0].x - x) + Mathf.Abs(graph[0].z - z));
             localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(x, z));
         }
-        photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, x, z);
         unitSelected = "false";
         foreach(GameObject selected in selectedTiles)
         {
@@ -310,7 +306,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             Destroy(selected);
         }
-        photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, x, z);
 
         Transform localtile = GameObject.Find(tilemap.GetGrid().GetGridObject(x, z).ToString() + x + z).transform;
         TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
@@ -338,10 +333,9 @@ public class GameManager : MonoBehaviourPunCallbacks
                 helper.Visualize(teamColours[unitChecker.GetTeam()], tileInstance);
                 Destroy(localtile.gameObject);
             }
-            photonView.RPC("SynchronizeCapture", RpcTarget.Others, x, z, localtile.position, oldtile);
             if(possibleloser != -1)
             {
-                photonView.RPC("GameLost", PhotonNetwork.PlayerList[possibleloser], PhotonNetwork.PlayerList[possibleloser].CustomProperties["Index"]);
+                GameLost(possibleloser);
             }
         }
         unitSelected = "false";
@@ -368,8 +362,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         supplier.SetIsActive(false);
         supplier.VisualDeactivation();
         localTurnSystem.MoveUnitAfterOrder(supplier);
-        photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, x, z);
-        photonView.RPC("SynchronizeSupply", RpcTarget.All, x, z);
+        SynchronizeSupply(x, z);
         unitSelected = "false";
         canvas.GetComponent<GameGUI>().HideActionInfo();
     }
@@ -480,8 +473,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             Destroy(selected);
         }
-        photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, x, z);
-        photonView.RPC("SynchronizeUpgrade", RpcTarget.All, x, z);
+        SynchronizeUpgrade(x, z);
         unitSelected = "false";
         canvas.GetComponent<GameGUI>().HideActionInfo();
     }
@@ -497,19 +489,24 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         menuUp = false;
         canvas.GetComponent<GameGUI>().quickmenu.SetActive(false);
-        photonView.RPC("SynchronizeTurn", RpcTarget.All);
+        SynchronizeTurn();
     }
 
-    [PunRPC]
     public void GameLost(int playerID)
     {
-        photonView.RPC("RemovePlayerFromGame", RpcTarget.All, playerID);
-        photonView.RPC("CheckVictoryConditions", RpcTarget.Others);
-        canvas.GetComponent<GameGUI>().ShowGameEndDialog(false);
-        menuUp = true;
+        RemovePlayerFromGame(playerID);
+        //photonView.RPC("CheckVictoryConditions", RpcTarget.Others);
+        if(playerID == localPlayerID)
+        {
+            canvas.GetComponent<GameGUI>().ShowGameEndDialog(false);
+            menuUp = true;
+        }
+        else
+        {
+            CheckVictoryConditions(localPlayerID);
+        }
     }
 
-    [PunRPC]
     public void RemovePlayerFromGame(int PlayerID)
     {
         foreach(Unit destroyUnit in playersInMatch[PlayerID].GetUnloadedUnits())
@@ -535,32 +532,35 @@ public class GameManager : MonoBehaviourPunCallbacks
         playersInMatch.RemoveAt(PlayerID);
     }
 
-    [PunRPC]
-    public void CheckVictoryConditions()
+    public void CheckVictoryConditions(int playerID)
     {
         bool victory = true;
         for (int z = 0; z < mapSizeZ; z++)
         {
             for (int x = 0; x < mapSizeX; x++)
             {
-                if(tilemap.GetGrid().GetGridObject(x, z).GetTilemapSprite() == TileType.TilemapSprite.HQ && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() != localPlayerID + 1)
+                if(tilemap.GetGrid().GetGridObject(x, z).GetTilemapSprite() == TileType.TilemapSprite.HQ && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() != playerID + 1)
                 {
                     victory = false;
                 }
             }
         }
-        if(victory)
+        if(victory && playerID == localPlayerID)
         {
             canvas.GetComponent<GameGUI>().ShowGameEndDialog(victory);
             foreach(Player playa in playersInMatch)
             {
-                if(playa.GetTeam() == localPlayerID + 1) photonView.RPC("SynchronizeGrantWin", RpcTarget.All, localPlayerID + 1);
+                if(playa.GetTeam() == localPlayerID + 1) SynchronizeGrantWin(localPlayerID + 1);
             }
             menuUp = true;
         }
+        else if(victory && playerID != localPlayerID)
+        {
+            //AI evaluation best there
+        }
     }
 
-    public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
+    /*public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
         int leavingPlayerTeam = (int)otherPlayer.CustomProperties["Index"] + 1;
         bool viable = false;
@@ -573,78 +573,18 @@ public class GameManager : MonoBehaviourPunCallbacks
             RemovePlayerFromGame((int)otherPlayer.CustomProperties["Index"]);
             CheckVictoryConditions();
         }
-    }
+    }*/
 
     public bool CheckAlliance(int player1, int player2)
     {
         if(player1 == 0 || player2 == 0) return false;
-        int team1 = ((int[])PhotonNetwork.CurrentRoom.CustomProperties["Alliances"])[player1-1];
-        int team2 = ((int[])PhotonNetwork.CurrentRoom.CustomProperties["Alliances"])[player2-1];
+        int team1 = 1;
+        int team2 = 2;
         if(team1 != 0 && team2 != 0 && team1 == team2) return true;
         return false;
     }
 
-    [PunRPC]
-    private void SynchronizeMove(int startx, int startz, int endx, int endz)
-    {
-        unitmap.MoveUnit(startx, startz, endx, endz);
-        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(endx, endz).ToString() + startx + startz);
-        if(movableUnit)
-        {
-            movableUnit.transform.position = new Vector3(endx * 2, 0.7f, endz * 2);
-            movableUnit.name = unitmap.GetGrid().GetGridObject(endx, endz).ToString() + endx + endz;
-            unitmap.GetGrid().GetGridObject(endx, endz).FuelCost(Mathf.Abs(startx - endx) + Mathf.Abs(startz - endz));
-        }
-    }
-
-    [PunRPC]
-    private void SynchronizeFire(int attackerx, int attackerz, int defenderx, int defenderz)
-    {
-        bool isDead = (unitmap.AttackUnit(unitmap.GetGrid().GetGridObject(attackerx, attackerz), unitmap.GetGrid().GetGridObject(defenderx, defenderz), damageMatrix, tilemap.GetGrid().GetGridObject(defenderx, defenderz).GetDefence()));
-        unitmap.GetGrid().GetGridObject(attackerx, attackerz).AmmoCost(1);
-        if(isDead)
-        {
-            GameObject destroyable = GameObject.Find(unitmap.GetGrid().GetGridObject(defenderx, defenderz).ToString() + defenderx + defenderz);
-            Destroy(destroyable);
-            for(int i = 0; i < unitmap.GetGrid().GetGridObject(defenderx, defenderz).GetLoadCapacity(); i++)
-            {
-                if(unitmap.GetGrid().GetGridObject(defenderx, defenderz).GetLoadedUnits()[i] != null)
-                {
-                    playersInMatch[unitmap.GetGrid().GetGridObject(defenderx, defenderz).GetTeam()-1].RemoveLoadedUnit(unitmap.GetGrid().GetGridObject(defenderx, defenderz).GetLoadedUnits()[i]);
-                }
-            }
-            playersInMatch[unitmap.GetGrid().GetGridObject(defenderx, defenderz).GetTeam()-1].RemoveUnit(unitmap.GetGrid().GetGridObject(defenderx, defenderz));
-            unitmap.GetGrid().SetGridObject(defenderx, defenderz, null);
-        }
-    }
-
-    [PunRPC]
-    private void SynchronizeCapture(int x, int z, Vector3 pos, string tilename)
-    {
-        TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
-        Unit unitChecker = unitmap.GetGrid().GetGridObject(x, z);
-        Building helper = (Building)tileChecker;
-        helper.SetHealth(helper.GetHealth() - unitChecker.GetHealth());
-        if(helper.GetHealth() <= 0)
-        {
-            if(helper.GetTeam() != 0) playersInMatch[helper.GetTeam()-1].RemoveBuilding(helper);
-            if(tileChecker.GetType().Equals(typeof(HQ)))
-            {
-                helper.SetTilemapSprite(TileType.TilemapSprite.City);
-            }
-            helper.SetTeam(unitChecker.GetTeam());
-            TileType ttm = tileTypes[tilemap.GetIntFromSprite(x, z)];
-            GameObject tileInstance = Instantiate(ttm.tileVisualPrefab, pos, Quaternion.identity, map);
-            tileInstance.name = tileChecker.ToString() + x + z;
-            tileChecker.setTileVisual(tileInstance);
-            playersInMatch[turnCounter].AddBuilding(helper);
-            helper.Visualize(teamColours[unitChecker.GetTeam()], tileInstance);
-            RPCDestroy(tilename);
-        }
-    }
-
-    [PunRPC]
-    private void SynchronizeSupply(int x, int z)
+    public void SynchronizeSupply(int x, int z)
     {
         List<Unit> supplytargets = new List<Unit>(unitmap.GetFriendlyUnitsInRange(x, z));
         foreach(Unit target in supplytargets)
@@ -654,37 +594,11 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
-    [PunRPC]
-    private void SynchronizeLoad(int loadedx, int loadedz, int loaderx, int loaderz, int index)
-    {
-        GameObject loadedunit = GameObject.Find(unitmap.GetGrid().GetGridObject(loadedx, loadedz).ToString() + loadedx + loadedz);
-        Destroy(loadedunit);
-        playersInMatch[unitmap.GetGrid().GetGridObject(loadedx, loadedz).GetTeam()-1].RemoveUnit(unitmap.GetGrid().GetGridObject(loadedx, loadedz));
-        unitmap.GetGrid().GetGridObject(loaderx, loaderz).LoadUnit(index, unitmap.GetGrid().GetGridObject(loadedx, loadedz));
-        playersInMatch[unitmap.GetGrid().GetGridObject(loadedx, loadedz).GetTeam()-1].AddLoadedUnit(unitmap.GetGrid().GetGridObject(loaderx, loaderz).GetLoadedUnits()[index]);
-        unitmap.GetGrid().SetGridObject(loadedx, loadedz, null);
-    }
-
-    [PunRPC]
-    private void SynchronizeUnload(int unloaderx, int unloaderz, int unloadedx, int unloadedz, int index)
-    {
-        Unit unloader = unitmap.GetGrid().GetGridObject(unloaderx, unloaderz);
-        Unit unloaded = unloader.GetLoadedUnits()[index];
-        unitmap.InsertUnit(unloadedx, unloadedz, unloaded.GetUnitType(), unloaded.GetTeam(), unloaded.GetCurrentAmmo(), unloaded.GetCurrentFuel(), unloaded.GetLoadedUnits(), unloaded.GetUpgradeCounter());
-        UnitInstantiate(unloaded, unloadedx, unloadedz, unloaded.GetTeam());
-        playersInMatch[unitmap.GetGrid().GetGridObject(unloadedx, unloadedz).GetTeam()-1].RemoveLoadedUnit(unitmap.GetGrid().GetGridObject(unloaderx, unloaderz).GetLoadedUnits()[index]);
-        unloader.LoadUnit(index, null);
-        playersInMatch[unitmap.GetGrid().GetGridObject(unloadedx, unloadedz).GetTeam()-1].AddUnit(unitmap.GetGrid().GetGridObject(unloadedx, unloadedz));
-        UnitArrayShiftLeft(unloader.GetLoadedUnits(), index+1);
-    }
-
-    [PunRPC]
     private void SynchronizeUpgrade(int x, int z)
     {
         unitmap.GetGrid().GetGridObject(x, z).Upgrade();
     }
 
-    [PunRPC]
     private void SynchronizeTurn()
     {
         if(turnCounter + 1 >= playersInMatch.Count)
@@ -698,13 +612,35 @@ public class GameManager : MonoBehaviourPunCallbacks
         localTurnSystem.TurnInit(playersInMatch[turnCounter]);
     }
 
-    [PunRPC]
     private void SynchronizeGrantWin(int team)
     {
         foreach(Player playa in playersInMatch)
         {
             if(playa.GetTeam() == team) playa.GrantWin();
         }
+    }
+
+    //AI helper functions below this command and above Update()
+    public List<DijkstraNode> getUnitMovementGraph(int localx, int localz)
+    {
+        return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, false);
+    }
+
+    public List<DijkstraNode> getMapReachabilityGraph(int localx, int localz)
+    {
+        return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, true);
+    }
+
+    public int getPotentialAttackValue(Unit attacker, Unit defender)
+    {
+        unitmap.SimulateAttack(attacker, defender, damageMatrix, tilemap.GetGrid().GetGridObject(defender.GetX(), defender.GetZ()).GetDefence(), tilemap.GetGrid().GetGridObject(attacker.GetX(), attacker.GetZ()).GetDefence(), out int attack, out int counterattack);
+        return (int)(defender.GetCost() * ((float)attack / 100) - attacker.GetCost() * ((float)counterattack / 100));
+    }
+
+    public int getPotentialCounterattack(Unit attacker, Unit defender)
+    {
+        unitmap.SimulateAttack(attacker, defender, damageMatrix, tilemap.GetGrid().GetGridObject(defender.GetX(), defender.GetZ()).GetDefence(), tilemap.GetGrid().GetGridObject(attacker.GetX(), attacker.GetZ()).GetDefence(), out int attack, out int counterattack);
+        return counterattack;
     }
 
     private void Update()
@@ -889,13 +825,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.B))
-            {
-                tilemap.Save((string)PhotonNetwork.CurrentRoom.CustomProperties["MapName"] + "_Tiles");
-                unitmap.Save((string)PhotonNetwork.CurrentRoom.CustomProperties["MapName"] + "_Units");
-                Debug.Log("Saved!");
-            }
-
             if (Input.GetKeyDown(KeyCode.N))
             {
                 foreach (Transform child in map)
@@ -1003,7 +932,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                                 }
                                 unitSelected = "moved";
 
-                                canvas.GetComponent<GameGUI>().ShowActionInfo(actionmove, actionfire, actioncapture, actionsupply, actionload, unloadactions, actionupgrade, x, z);
+                                canvas.GetComponent<GameGUI>().SPShowActionInfo(actionmove, actionfire, actioncapture, actionsupply, actionload, unloadactions, actionupgrade, x, z);
                             }
                         }
                     }
@@ -1026,8 +955,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                             attacker.VisualDeactivation();
                             attacker.AmmoCost(1);
                             localTurnSystem.MoveUnitAfterOrder(attacker);
-                            photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, movementx, movementz);
-                            photonView.RPC("SynchronizeFire", RpcTarget.Others, targetables[0].GetX(), targetables[0].GetZ(), x, z);
                             if(isDead)
                             {
                                 GameObject destroyable = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + x + z);
@@ -1047,7 +974,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                                 bool isDeadAttacker = (unitmap.AttackUnit(unitmap.GetGrid().GetGridObject(x, z), unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()), damageMatrix, tilemap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()).GetDefence()));
                                 Unit defender = unitmap.GetGrid().GetGridObject(x, z);
                                 defender.AmmoCost(1);
-                                photonView.RPC("SynchronizeFire", RpcTarget.Others, x, z, targetables[0].GetX(), targetables[0].GetZ());
                                 if(isDeadAttacker)
                                 {
                                     GameObject destroyableAttacker = GameObject.Find(unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()).ToString() + targetables[0].GetX() + targetables[0].GetZ());
@@ -1090,8 +1016,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                                     GameObject destroyable = GameObject.Find(unitmap.GetGrid().GetGridObject(movementx, movementz).ToString() + movementx + movementz);
                                     Destroy(destroyable);
                                     unitmap.GetGrid().SetGridObject(movementx, movementz, null);
-                                    photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, movementx, movementz);
-                                    photonView.RPC("SynchronizeLoad", RpcTarget.Others, movementx, movementz, x, z, i);
                                     break;
                                 }
                             }
@@ -1121,8 +1045,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                             unloader.SetIsActive(false);
                             localTurnSystem.MoveUnitAfterOrder(unloader);
                             playersInMatch[unloaded.GetTeam()-1].AddUnit(unloaded);
-                            photonView.RPC("SynchronizeMove", RpcTarget.Others, graph[0].x, graph[0].z, movementx, movementz);
-                            photonView.RPC("SynchronizeUnload", RpcTarget.Others, movementx, movementz, x, z, unloadindex);
                             unloaded.VisualDeactivation();
                             unloader.VisualDeactivation();
                         }
@@ -1137,11 +1059,12 @@ public class GameManager : MonoBehaviourPunCallbacks
                         TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
                         if(localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(x, z)))
                         {
-                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, false);
+                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, true);
                             if (graph != null)
                             {
                                 for (int i = 0; i < graph.Count; i++)
                                 {
+                                    Debug.Log(graph[i].nodePosition() + " = " + graph[i].moveCost);
                                     selectedTiles.Add(Instantiate(selectedTile, new Vector3(graph[i].x * 2, 0.1f, graph[i].z * 2), Quaternion.identity, map));
                                 }
                                 unitSelected = "move";
@@ -1269,6 +1192,21 @@ public class GameManager : MonoBehaviourPunCallbacks
                 else
                 {
                     canvas.GetComponent<GameGUI>().HideUnitInfo();
+                }
+            }
+
+            if(Input.GetKeyDown(KeyCode.Z) && unitSelected == "move" && MouseClickDetector(ref x, ref z, ref tile))
+            {
+                Debug.Log("Attempting to find path from " + graph[0].x + "," + graph[0].z + " to " + x + "," + z);
+                List<PathNode> path = pathfinding.FindPath(graph[0].x, graph[0].z, x, z, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z), tilemap, unitmap);
+                if(path != null)
+                {
+                    Debug.Log("Path found!");
+                    for(int i = 0; i < path.Count - 1; i++)
+                    {
+                        Debug.Log(path[i].nodePosition());
+                        Debug.DrawLine(new Vector3(path[i].x * 2, 0.7f ,path[i].z * 2), new Vector3(path[i+1].x * 2, 0.7f, path[i+1].z * 2), Color.magenta, 2.0f);
+                    }
                 }
             }
 

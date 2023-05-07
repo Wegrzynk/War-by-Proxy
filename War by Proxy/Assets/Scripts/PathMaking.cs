@@ -21,7 +21,7 @@ public class PathMaking
         return grid;
     }
 
-    public List<DijkstraNode> ApplyDijkstra(int x, int z, List<DijkstraNode> graph, Unit unit)
+    public List<DijkstraNode> ApplyDijkstra(int x, int z, List<DijkstraNode> graph, Unit unit, bool getWholeMap)
     {
         DijkstraNode startNode = grid.GetGridObject(x, z);
         int distance = unit.GetMovementDistance();
@@ -66,11 +66,25 @@ public class PathMaking
             }
         }
 
-        for(int i = 0; i < moveCost.Length; i++)
+        if(getWholeMap)
         {
-            if(moveCost[i] > unit.GetMovementDistance())
+            for(int i = 0; i < moveCost.Length; i++)
             {
-                processedVertices.Remove(graph[i]);
+                graph[i].SetMoveCost(moveCost[i]);
+                if(moveCost[i] > 2048)
+                {
+                    processedVertices.Remove(graph[i]);
+                }
+            }
+        }
+        else
+        {
+            for(int i = 0; i < moveCost.Length; i++)
+            {
+                if(moveCost[i] > unit.GetMovementDistance())
+                {
+                    processedVertices.Remove(graph[i]);
+                }
             }
         }
 
@@ -88,11 +102,11 @@ public class PathMaking
         return result;
     }
 
-    public List<DijkstraNode> CreateReachableGraph(int x, int z, Unit unit, Tilemap selectedTilemap, Unitmap selectedUnitmap, bool isEnemy)
+    public List<DijkstraNode> CreateReachableGraph(int x, int z, Unit unit, Tilemap selectedTilemap, Unitmap selectedUnitmap, bool isEnemy, bool getWholeMap)
     {
         DijkstraNode startNode = grid.GetGridObject(x, z);
         startNode.SetMoveCost(selectedTilemap.GetGrid().GetGridObject(x, z).GetMovementPenaltyType(unit));
-        if(startNode.moveCost == 0) startNode.SetMoveCost(50);
+        if(startNode.moveCost == 0) startNode.SetMoveCost(4096);
         List<DijkstraNode> checkerList = new List<DijkstraNode> { startNode };
         List<DijkstraNode> graphVertices = new List<DijkstraNode>();
         List<DijkstraNode> replacer = new List<DijkstraNode>();
@@ -101,6 +115,10 @@ public class PathMaking
         if(isEnemy)
         {
             givenMovementDistance = unit.GetMovementDistance() + 1;
+        }
+        else if(getWholeMap)
+        {
+            givenMovementDistance = 2048;
         }
         else
         {
@@ -124,7 +142,7 @@ public class PathMaking
                     {
                         Unit blocker = selectedUnitmap.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z);
                         neighbourNode.SetMoveCost(selectedTilemap.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z).GetMovementPenaltyType(unit));
-                        if(neighbourNode.moveCost == 0 || (blocker != null && blocker.GetTeam() != unit.GetTeam())) neighbourNode.SetMoveCost(50);
+                        if(neighbourNode.moveCost == 0 || (blocker != null && blocker.GetTeam() != unit.GetTeam())) neighbourNode.SetMoveCost(4096);
                         replacer.Add(neighbourNode);
                     }
                 }
@@ -140,12 +158,12 @@ public class PathMaking
         }
 
 
-        replacer.AddRange(ApplyDijkstra(x, z, graphVertices, unit));
+        replacer.AddRange(ApplyDijkstra(x, z, graphVertices, unit, getWholeMap));
 
         return replacer;
     }
 
-    private List<DijkstraNode> GetNeighbourList(DijkstraNode currentNode)
+    public List<DijkstraNode> GetNeighbourList(DijkstraNode currentNode)
     {
         List<DijkstraNode> neighbourList = new List<DijkstraNode>();
 

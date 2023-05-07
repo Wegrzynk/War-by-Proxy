@@ -231,7 +231,7 @@
       "attackDistanceMin": 0,
       "attackDistanceMax": 0,
       "movementType": "Ship",
-      "cost": 20000,
+      "cost": 16000,
       "loadCapacity": 0 
     },
     {

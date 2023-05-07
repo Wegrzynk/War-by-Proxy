@@ -43,6 +43,11 @@ public class PathNode : Node
     {
         return x + "," + z;
     }
+
+    public string nodePosition()
+    {
+        return x + "," + z;
+    }
 }
 
 public class DijkstraNode: Node

@@ -236,6 +236,59 @@ public class GameGUI : MonoBehaviourPunCallbacks
         actionmenu.SetActive(true);
     }
 
+    public void SPShowActionInfo(bool move, bool attack, bool capture, bool supply, bool load, bool[] unloadlist, bool upgrade, int x, int z)
+    {
+        SinglePlayerManager helper = mainscriptholder.GetComponent<SinglePlayerManager>();
+        if(move)
+        {
+            GameObject moveaction = Instantiate(actionoptionprefab, actionmenu.transform);
+            moveaction.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Move";
+            moveaction.GetComponent<Button>().onClick.AddListener(() => helper.ActionMove(x, z));
+        }
+        if(attack)
+        {
+            GameObject attackaction = Instantiate(actionoptionprefab, actionmenu.transform);
+            attackaction.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Attack";
+            attackaction.GetComponent<Button>().onClick.AddListener(() => helper.ActionAttack(x, z));
+        }
+        if(capture)
+        {
+            GameObject captureaction = Instantiate(actionoptionprefab, actionmenu.transform);
+            captureaction.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Capture";
+            captureaction.GetComponent<Button>().onClick.AddListener(() => helper.ActionCapture(x, z));
+        }
+        if(supply)
+        {
+            GameObject supplyaction = Instantiate(actionoptionprefab, actionmenu.transform);
+            supplyaction.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Supply";
+            supplyaction.GetComponent<Button>().onClick.AddListener(() => helper.ActionSupply(x, z));
+        }
+        if(load)
+        {
+            GameObject loadaction = Instantiate(actionoptionprefab, actionmenu.transform);
+            loadaction.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Load";
+            loadaction.GetComponent<Button>().onClick.AddListener(() => helper.ActionLoad(x, z));
+        }
+        for(int i = 0; i < unloadlist.Length; i++)
+        {
+            if(unloadlist[i])
+            {
+                GameObject unloadaction = Instantiate(actionoptionprefab, actionmenu.transform);
+                unloadaction.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Unload" + (i+1);
+                int indexparameter = i;
+                unloadaction.GetComponent<Button>().onClick.AddListener(() => helper.ActionUnload(x, z, indexparameter));
+            }
+        }
+        if(upgrade)
+        {
+            GameObject upgradeaction = Instantiate(actionoptionprefab, actionmenu.transform);
+            upgradeaction.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Upgrade";
+            upgradeaction.GetComponent<Button>().onClick.AddListener(() => helper.ActionUpgrade(x, z));
+        }
+
+        actionmenu.SetActive(true);
+    }
+
     public void HideActionInfo()
     {
         foreach (Transform child in actionmenu.transform)
@@ -248,6 +301,23 @@ public class GameGUI : MonoBehaviourPunCallbacks
     public void ShowMatchOverview(Material[] colours)
     {
         List<Player> playersinmatch = new List<Player>(mainscriptholder.GetComponent<GameManager>().playersInMatch);
+        foreach(Player playerinfo in playersinmatch)
+        {
+            GameObject matchplayer = Instantiate(matchoverviewprefab, matchoverview.transform.Find("OverviewPlayersList").Find("ScrollView").Find("Viewport").Find("Content"));
+            matchplayer.transform.Find("PlayerColor").GetComponent<Image>().color = colours[playerinfo.GetTeam()].color;
+            matchplayer.transform.Find("PlayerName").GetComponent<TextMeshProUGUI>().text = PhotonNetwork.PlayerList[playerinfo.GetTeam()-1].NickName;
+            matchplayer.transform.Find("PlayerFunds").Find("Text").GetComponent<TextMeshProUGUI>().text = "Funds: " + playerinfo.GetFunds().ToString();
+            matchplayer.transform.Find("PlayerIncome").Find("Text").GetComponent<TextMeshProUGUI>().text = "Income: " + (playerinfo.GetBuildings().Count * 1000).ToString();
+            matchplayer.transform.Find("PlayerUnits").Find("Text").GetComponent<TextMeshProUGUI>().text = "Units Owned: " + playerinfo.GetUnits().Count;
+            matchplayer.transform.Find("PlayerUnitsValue").Find("Text").GetComponent<TextMeshProUGUI>().text = "Units Value: " + playerinfo.GetUnitsValue();
+        }
+        matchoverview.SetActive(true);
+        quickmenu.SetActive(false);
+    }
+
+    public void SPShowMatchOverview(Material[] colours)
+    {
+        List<Player> playersinmatch = new List<Player>(mainscriptholder.GetComponent<SinglePlayerManager>().playersInMatch);
         foreach(Player playerinfo in playersinmatch)
         {
             GameObject matchplayer = Instantiate(matchoverviewprefab, matchoverview.transform.Find("OverviewPlayersList").Find("ScrollView").Find("Viewport").Find("Content"));
@@ -308,6 +378,20 @@ public class GameGUI : MonoBehaviourPunCallbacks
         }
         recruitmenu.SetActive(true);
     }
+
+    public void SPShowRecruitInfo(List<Unit> array, int x, int z, int team)
+    {
+        foreach(Unit item in array)
+        {
+            GameObject buyableUnit = Instantiate(recruitoptionprefab, recruitmenu.transform.Find("UnitShop").Find("ScrollView").Find("Viewport").Find("Content"));
+            item.SetUnitType(item.GetUnitType(), team);
+            item.SetUnitVisual(item.unitVisualPrefab);
+            buyableUnit.transform.Find("UnitName").GetComponent<TextMeshProUGUI>().text = item.ToString();
+            buyableUnit.transform.Find("UnitPrice").GetComponent<TextMeshProUGUI>().text = item.GetCost().ToString();
+            mainscriptholder.GetComponent<SinglePlayerManager>().AddRecruitListeners(buyableUnit, item, x, z, team);
+        }
+        recruitmenu.SetActive(true);
+    }
     
     public void HideRecruitInfo()
     {
@@ -329,6 +413,19 @@ public class GameGUI : MonoBehaviourPunCallbacks
             buyableBuilding.transform.Find("UnitName").GetComponent<TextMeshProUGUI>().text = item.ToString();
             buyableBuilding.transform.Find("UnitPrice").GetComponent<TextMeshProUGUI>().text = item.GetCost().ToString();
             mainscriptholder.GetComponent<GameManager>().AddBuildingListeners(buyableBuilding, item, x, z, tile, team);
+        }
+        buildingupgrademenu.SetActive(true);
+    }
+
+    public void SPShowBuildingUpgrades(List<City> array, int x, int z, Transform tile, int team)
+    {
+        foreach(City item in array)
+        {
+            GameObject buyableBuilding = Instantiate(recruitoptionprefab, buildingupgrademenu.transform.Find("BuildingShop").Find("ScrollView").Find("Viewport").Find("Content"));
+            item.setTileVisual(item.tileVisualPrefab);
+            buyableBuilding.transform.Find("UnitName").GetComponent<TextMeshProUGUI>().text = item.ToString();
+            buyableBuilding.transform.Find("UnitPrice").GetComponent<TextMeshProUGUI>().text = item.GetCost().ToString();
+            mainscriptholder.GetComponent<SinglePlayerManager>().AddBuildingListeners(buyableBuilding, item, x, z, tile, team);
         }
         buildingupgrademenu.SetActive(true);
     }

@@ -11,6 +11,7 @@ public class Player
     private List<Unit> ownedLoadedUnits;
     private bool isActive;
     private bool achievedVictory;
+    private int AIstatus;
 
     public Player(int team, Tilemap tilemap, Unitmap unitmap)
     {

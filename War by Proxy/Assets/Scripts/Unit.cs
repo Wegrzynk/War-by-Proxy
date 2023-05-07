@@ -63,6 +63,7 @@ public class Unit
     private Unit[] loadedUnits;
     private int upgradeCounter;
     private bool isActive;
+    private int AIbehaviour;
 
     public Unit(GameGrid<Unit> grid, int x, int z)
     {
@@ -71,6 +72,7 @@ public class Unit
         this.z = z;
         this.health = 100;
         this.isActive = true;
+        this.AIbehaviour = 0;
     }
 
     public void SetUnitType(UnitType unitType, int team, int currentAmmo, int currentFuel, Unit[] loadedUnits, int upgradeCounter)
@@ -141,6 +143,13 @@ public class Unit
         return unitType;
     }
 
+    public bool isIndirect()
+    {
+        //if(unitType == UnitType.Artillery || unitType == UnitType.Battleship || unitType == UnitType.Missile || unitType == UnitType.Rocket) return true;
+        if(attackDistanceMax > 0) return true;
+        return false;
+    }
+
     public int GetTeam()
     {
         return team;
@@ -166,6 +175,11 @@ public class Unit
         isActive = activation;
     }
 
+    public void SetAIbehaviour(int behaviour)
+    {
+        AIbehaviour = behaviour;
+    }
+
     public int GetIntFromUnit()
     {
         return (int)unitType;
@@ -179,6 +193,11 @@ public class Unit
     public int GetMovementType()
     {
         return (int)movementType;
+    }
+
+    public MovementType GetPureMovementType()
+    {
+        return movementType;
     }
 
     public string GetStringFromMovementType()

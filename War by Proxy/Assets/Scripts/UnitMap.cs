@@ -84,6 +84,84 @@ public class Unitmap
         return targetableUnits;
     }
 
+    public List<Unit> GetEnemyUnitsInRange(int x, int z, bool isStationedOnRadio, SinglePlayerManager allianceCheckScript)
+    {
+        int minRange = grid.GetGridObject(x, z).GetMinRange();
+        int maxRange = grid.GetGridObject(x, z).GetMaxRange();
+        if(minRange == 0 || maxRange == 0)
+        {
+            minRange = 1;
+            maxRange = 1;
+        }
+        else if(maxRange > 0 && isStationedOnRadio)
+        {
+            maxRange++;
+        }
+        int counter = 0;
+        List<Unit> targetableUnits = new List<Unit>();
+
+        for(int i=maxRange; i>=-maxRange; i--)
+        {
+            for(int j=counter; j>=-counter; j--)
+            {
+                if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
+                {
+                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() != grid.GetGridObject(x, z).GetTeam() && !allianceCheckScript.CheckAlliance(grid.GetGridObject(x+i, z+j).GetTeam(), grid.GetGridObject(x, z).GetTeam()))
+                    {
+                        targetableUnits.Add(grid.GetGridObject(x+i, z+j));
+                    }
+                }
+            }
+            if(i>0)
+            {
+                counter++;
+            }
+            else
+            {
+                counter--;
+            }
+        }
+
+        return targetableUnits;
+    }
+
+    public List<Unit> GetEnemyUnitsInRange(int x, int z, SinglePlayerManager allianceCheckScript, Unit unitReference)
+    {
+        int minRange = unitReference.GetMinRange();
+        int maxRange = unitReference.GetMaxRange();
+        if(minRange == 0 || maxRange == 0)
+        {
+            minRange = 1;
+            maxRange = 1;
+        }
+        int counter = 0;
+        List<Unit> targetableUnits = new List<Unit>();
+
+        for(int i=maxRange; i>=-maxRange; i--)
+        {
+            for(int j=counter; j>=-counter; j--)
+            {
+                if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
+                {
+                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() != unitReference.GetTeam() && !allianceCheckScript.CheckAlliance(grid.GetGridObject(x+i, z+j).GetTeam(), unitReference.GetTeam()))
+                    {
+                        targetableUnits.Add(grid.GetGridObject(x+i, z+j));
+                    }
+                }
+            }
+            if(i>0)
+            {
+                counter++;
+            }
+            else
+            {
+                counter--;
+            }
+        }
+
+        return targetableUnits;
+    }
+
     public List<Unit> GetFriendlyUnitsInRange(int x, int z)
     {
         int minRange = 1;
