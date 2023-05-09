@@ -3887,87 +3887,127 @@ MonoBehaviour:
   unitTypes:
   - unitType: 0
     unitVisualPrefab: {fileID: 2227748425208978942, guid: af77b51bc81eafc4ca742d21fbdabe3d, type: 3}
+    cost: 0
   - unitType: 1
     unitVisualPrefab: {fileID: 2108711226503581956, guid: d0fdd0b376cb0034bb0f6675e9b54c6c, type: 3}
+    cost: 0
   - unitType: 2
     unitVisualPrefab: {fileID: 7318466550413269669, guid: 5174dd2a686a68440b685902940483e6, type: 3}
+    cost: 0
   - unitType: 3
     unitVisualPrefab: {fileID: 2863747884650970029, guid: 17caa9d24e516a146815d9a895ff25b8, type: 3}
+    cost: 0
   - unitType: 4
     unitVisualPrefab: {fileID: 6458946812982983152, guid: e2a7cb6c38d1061469585d2d9e20eee8, type: 3}
+    cost: 0
   - unitType: 5
     unitVisualPrefab: {fileID: 4761304536152432563, guid: 5aa6ea8fa41ec604cbfe34f28cdf93c0, type: 3}
+    cost: 0
   - unitType: 6
     unitVisualPrefab: {fileID: 1348449224667518666, guid: 84fd539b91fb75f4b9592f81670a9ff1, type: 3}
+    cost: 0
   - unitType: 7
     unitVisualPrefab: {fileID: 6109827861916214741, guid: 9ab37ac603e58dd4a93ce6a99161e34f, type: 3}
+    cost: 0
   - unitType: 8
     unitVisualPrefab: {fileID: 8241758102033477628, guid: 214af9a9f09342240ac07d69620e7d9a, type: 3}
+    cost: 0
   - unitType: 9
     unitVisualPrefab: {fileID: 4935341089837806821, guid: 5d3f68eb4b618bd48ad49fd5a0a53018, type: 3}
+    cost: 0
   - unitType: 10
     unitVisualPrefab: {fileID: 126650683611586819, guid: 37fc72ff3e7dd084ab7e1eb0f1f53b55, type: 3}
+    cost: 0
   - unitType: 11
     unitVisualPrefab: {fileID: 6423723320754442433, guid: b22e72356db61b74d8bf322960c4f692, type: 3}
+    cost: 0
   - unitType: 12
     unitVisualPrefab: {fileID: 5718997693982727827, guid: 46ba43b26a3fd2c4297397b9e80ee92e, type: 3}
+    cost: 0
   - unitType: 13
     unitVisualPrefab: {fileID: 6572158500398996462, guid: 6b7dca40b8c3ef94789fb8bd1df6edce, type: 3}
+    cost: 0
   - unitType: 14
     unitVisualPrefab: {fileID: 2016797994486866190, guid: 9fb1324ad99f4ff41a235ad2bfd89732, type: 3}
+    cost: 0
   - unitType: 15
     unitVisualPrefab: {fileID: 3534832153328053826, guid: 341db6801d2b5674d8a1a2e788277d88, type: 3}
+    cost: 0
   - unitType: 16
     unitVisualPrefab: {fileID: 7991245716840565574, guid: a296132e4fd69454c97ba43aa47f4441, type: 3}
+    cost: 0
   - unitType: 17
     unitVisualPrefab: {fileID: 1487667240059080688, guid: 84812f80724f6324b90be0921373febb, type: 3}
+    cost: 0
   - unitType: 18
     unitVisualPrefab: {fileID: 2639741697487198104, guid: 222372fbc789b5e4887a4b47479c6fea, type: 3}
+    cost: 0
   - unitType: 19
     unitVisualPrefab: {fileID: 5034629102473255265, guid: 7b101a29f963add45880ed1a51d6da6d, type: 3}
+    cost: 0
   militaryBaseRecruits:
   - unitType: 9
     unitVisualPrefab: {fileID: 4935341089837806821, guid: 5d3f68eb4b618bd48ad49fd5a0a53018, type: 3}
+    cost: 1000
   - unitType: 12
     unitVisualPrefab: {fileID: 5718997693982727827, guid: 46ba43b26a3fd2c4297397b9e80ee92e, type: 3}
+    cost: 3000
   - unitType: 15
     unitVisualPrefab: {fileID: 3534832153328053826, guid: 341db6801d2b5674d8a1a2e788277d88, type: 3}
+    cost: 4000
   - unitType: 1
     unitVisualPrefab: {fileID: 2108711226503581956, guid: d0fdd0b376cb0034bb0f6675e9b54c6c, type: 3}
+    cost: 5000
   - unitType: 2
     unitVisualPrefab: {fileID: 7318466550413269669, guid: 5174dd2a686a68440b685902940483e6, type: 3}
+    cost: 6000
   - unitType: 19
     unitVisualPrefab: {fileID: 5034629102473255265, guid: 7b101a29f963add45880ed1a51d6da6d, type: 3}
+    cost: 7000
   - unitType: 0
     unitVisualPrefab: {fileID: 2227748425208978942, guid: af77b51bc81eafc4ca742d21fbdabe3d, type: 3}
+    cost: 8000
   - unitType: 14
     unitVisualPrefab: {fileID: 2016797994486866190, guid: 9fb1324ad99f4ff41a235ad2bfd89732, type: 3}
+    cost: 12000
   - unitType: 16
     unitVisualPrefab: {fileID: 7991245716840565574, guid: a296132e4fd69454c97ba43aa47f4441, type: 3}
+    cost: 15000
   - unitType: 11
     unitVisualPrefab: {fileID: 6423723320754442433, guid: b22e72356db61b74d8bf322960c4f692, type: 3}
+    cost: 16000
   - unitType: 13
     unitVisualPrefab: {fileID: 6572158500398996462, guid: 6b7dca40b8c3ef94789fb8bd1df6edce, type: 3}
+    cost: 24000
   airportRecruits:
   - unitType: 18
     unitVisualPrefab: {fileID: 2639741697487198104, guid: 222372fbc789b5e4887a4b47479c6fea, type: 3}
+    cost: 5000
   - unitType: 3
     unitVisualPrefab: {fileID: 2863747884650970029, guid: 17caa9d24e516a146815d9a895ff25b8, type: 3}
+    cost: 9000
   - unitType: 8
     unitVisualPrefab: {fileID: 8241758102033477628, guid: 214af9a9f09342240ac07d69620e7d9a, type: 3}
+    cost: 20000
   - unitType: 5
     unitVisualPrefab: {fileID: 4761304536152432563, guid: 5aa6ea8fa41ec604cbfe34f28cdf93c0, type: 3}
+    cost: 22000
   portRecruits:
   - unitType: 10
     unitVisualPrefab: {fileID: 126650683611586819, guid: 37fc72ff3e7dd084ab7e1eb0f1f53b55, type: 3}
+    cost: 8000
   - unitType: 7
     unitVisualPrefab: {fileID: 6109827861916214741, guid: 9ab37ac603e58dd4a93ce6a99161e34f, type: 3}
+    cost: 14000
   - unitType: 17
     unitVisualPrefab: {fileID: 1487667240059080688, guid: 84812f80724f6324b90be0921373febb, type: 3}
+    cost: 16000
   - unitType: 4
     unitVisualPrefab: {fileID: 6458946812982983152, guid: e2a7cb6c38d1061469585d2d9e20eee8, type: 3}
+    cost: 17000
   - unitType: 6
     unitVisualPrefab: {fileID: 1348449224667518666, guid: 84fd539b91fb75f4b9592f81670a9ff1, type: 3}
+    cost: 20000
   cityUpgrades:
   - tilemapSprite: 13
     tileVisualPrefab: {fileID: 1110458894006474292, guid: 85f03c867cc522d43ac81c8c2b49c46f, type: 3}
@@ -3989,6 +4029,8 @@ MonoBehaviour:
   visibleGridPrefab: {fileID: 2424744806398279326, guid: dc1fd9dfdd34a014692626b2feb1e6b7, type: 3}
   turnIndicator: {fileID: 500964499}
   mainCamera: {fileID: 1075406199}
+  turnCounter: 0
+  AI: {fileID: 1173052223}
   debugMode: 4
 --- !u!4 &371816336
 Transform:
@@ -12009,6 +12051,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainScriptHolder: {fileID: 371816334}
+  minFoot: 5
 --- !u!4 &1173052224
 Transform:
   m_ObjectHideFlags: 0

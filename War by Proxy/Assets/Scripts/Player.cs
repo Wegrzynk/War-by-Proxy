@@ -12,8 +12,10 @@ public class Player
     private bool isActive;
     private bool achievedVictory;
     private int AIstatus;
+    public int[] unitTypeCount = new int[20];
+    AIQuirks RNGreference;
 
-    public Player(int team, Tilemap tilemap, Unitmap unitmap)
+    public Player(int team, Tilemap tilemap, Unitmap unitmap, AIQuirks reference)
     {
         this.team = team;
         isActive = false;
@@ -21,6 +23,11 @@ public class Player
         ownedUnits = new List<Unit>();
         ownedLoadedUnits = new List<Unit>();
         ownedBuildings = new List<Building>();
+        RNGreference = reference;
+        for(int i = 0; i < unitTypeCount.Length; i++)
+        {
+            unitTypeCount[i] = 0;
+        }
         for(int x = 0; x < tilemap.GetGrid().GetWidth(); x++)
         {
             for(int z = 0; z < tilemap.GetGrid().GetHeight(); z++)
@@ -33,6 +40,19 @@ public class Player
                 Unit unitHelp = unitmap.GetGrid().GetGridObject(x, z);
                 if(unitHelp != null && unitHelp.GetTeam() == team)
                 {
+                    if(RNGreference != null)
+                    {
+                        switch(unitHelp.GetUnitType())
+                        {
+                            case Unit.UnitType.Infantry: unitHelp.SetAIbehaviour(6); break;
+                            case Unit.UnitType.Mech: unitHelp.SetAIbehaviour(6); break;
+                            case Unit.UnitType.APC: unitHelp.SetAIbehaviour(7); break;
+                            case Unit.UnitType.Theli: unitHelp.SetAIbehaviour(8); break;
+                            case Unit.UnitType.Tship: unitHelp.SetAIbehaviour(0); break;
+                            default: unitHelp.SetAIbehaviour(RNGreference.RNGbehaviour((int)unitHelp.GetUnitType())); break;
+                        }
+                    }
+                    unitTypeCount[unitHelp.GetIntFromUnit()]++;
                     ownedUnits.Add(unitHelp);
                 }
             }

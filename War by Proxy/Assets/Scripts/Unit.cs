@@ -35,9 +35,9 @@ public class Unit
         Foot,
         Tires,
         Threads,
+        Air,
         Ship,
-        Lander,
-        Air
+        Lander
     }
 
     private GameGrid<Unit> grid;
@@ -58,7 +58,7 @@ public class Unit
     private int currentFuel;
     private int fuelConsumption;
     private int vision;
-    private int cost;
+    public int cost;
     private int loadCapacity;
     private Unit[] loadedUnits;
     private int upgradeCounter;
@@ -178,6 +178,11 @@ public class Unit
     public void SetAIbehaviour(int behaviour)
     {
         AIbehaviour = behaviour;
+    }
+
+    public int GetAIbehaviour()
+    {
+        return AIbehaviour;
     }
 
     public int GetIntFromUnit()

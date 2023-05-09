@@ -21,7 +21,77 @@ public class PathMaking
         return grid;
     }
 
-    public List<DijkstraNode> ApplyDijkstra(int x, int z, List<DijkstraNode> graph, Unit unit, bool getWholeMap)
+    public List<DijkstraNode> ApplyDijkstra(int x, int z, List<DijkstraNode> graph, Unit unit, Unitmap unitmap, bool getWholeMap)
+    {
+        DijkstraNode startNode = grid.GetGridObject(x, z);
+        int distance = unit.GetMovementDistance();
+        int[] moveCost = new int[graph.Count];
+        DijkstraNode[] shortestPreviousNodes = new DijkstraNode[graph.Count];
+        processedVertices = new List<DijkstraNode>();
+        unprocessedVertices = new List<DijkstraNode>();
+        unprocessedVertices.AddRange(graph);
+        
+        List<DijkstraNode> neighbours = new List<DijkstraNode>();
+
+        for(int i = 0; i < graph.Count; i++)
+        {
+            moveCost[i] = int.MaxValue;
+            shortestPreviousNodes[i] = null;
+        }
+        moveCost[unprocessedVertices.IndexOf(startNode)] = 0;
+        
+        while(unprocessedVertices.Count != 0)
+        {
+            int currentSmallest = int.MaxValue;
+            int smallestNodeIndex = -1;
+            for(int i = 0; i < graph.Count; i++)
+            {
+                if(moveCost[i] < currentSmallest && unprocessedVertices.IndexOf(graph[i]) != -1)
+                {
+                    currentSmallest = moveCost[i];
+                    smallestNodeIndex = i;
+                }
+            }
+            processedVertices.Add(graph[smallestNodeIndex]);
+            unprocessedVertices.Remove(graph[smallestNodeIndex]);
+            for(int i = 0; i < graph.Count; i++)
+            {
+                if(unprocessedVertices.Contains(graph[i]) && graph[i].connectedFromNodes.IndexOf(graph[smallestNodeIndex]) != -1)
+                {
+                    if(moveCost[i] > moveCost[smallestNodeIndex] + graph[i].moveCost){
+                        moveCost[i] = moveCost[smallestNodeIndex] + graph[i].moveCost;
+                        shortestPreviousNodes[i] = graph[smallestNodeIndex];
+                    }
+                }
+            }
+        }
+
+        if(getWholeMap)
+        {
+            for(int i = 0; i < moveCost.Length; i++)
+            {
+                graph[i].SetMoveCost(moveCost[i]);
+                if(moveCost[i] > 2048 || (i != 0 && unitmap.GetGrid().GetGridObject(graph[i].x, graph[i].z) != null))
+                {
+                    processedVertices.Remove(graph[i]);
+                }
+            }
+        }
+        else
+        {
+            for(int i = 0; i < moveCost.Length; i++)
+            {
+                if(moveCost[i] > unit.GetMovementDistance() || (i != 0 && unitmap.GetGrid().GetGridObject(graph[i].x, graph[i].z) != null))
+                {
+                    processedVertices.Remove(graph[i]);
+                }
+            }
+        }
+
+        return processedVertices;
+    }
+
+    public List<DijkstraNode> ApplyDijkstra(int x, int z, List<DijkstraNode> graph, Unit unit, Unitmap unitmap, bool getWholeMap, bool includeFriendlies)
     {
         DijkstraNode startNode = grid.GetGridObject(x, z);
         int distance = unit.GetMovementDistance();
@@ -158,7 +228,68 @@ public class PathMaking
         }
 
 
-        replacer.AddRange(ApplyDijkstra(x, z, graphVertices, unit, getWholeMap));
+        replacer.AddRange(ApplyDijkstra(x, z, graphVertices, unit, selectedUnitmap, getWholeMap));
+
+        return replacer;
+    }
+
+    public List<DijkstraNode> CreateReachableGraph(int x, int z, Unit unit, Unit.UnitType type, Tilemap selectedTilemap, Unitmap selectedUnitmap, bool isEnemy, bool getWholeMap)
+    {
+        DijkstraNode startNode = grid.GetGridObject(x, z);
+        startNode.SetMoveCost(selectedTilemap.GetGrid().GetGridObject(x, z).GetMovementPenaltyType((int)type));
+        if(startNode.moveCost == 0) startNode.SetMoveCost(4096);
+        List<DijkstraNode> checkerList = new List<DijkstraNode> { startNode };
+        List<DijkstraNode> graphVertices = new List<DijkstraNode>();
+        List<DijkstraNode> replacer = new List<DijkstraNode>();
+        int givenMovementDistance;
+
+        if(isEnemy)
+        {
+            givenMovementDistance = 3 + 1;
+        }
+        else if(getWholeMap)
+        {
+            givenMovementDistance = 2048;
+        }
+        else
+        {
+            givenMovementDistance = 3;
+        }
+
+        for(int i = 0; i < givenMovementDistance; i++)
+        {
+            foreach(DijkstraNode checkerNode in checkerList)
+            {
+                foreach(DijkstraNode neighbourNode in GetNeighbourList(checkerNode))
+                {
+                    neighbourNode.connectedFromNodes.Add(checkerNode);
+                    grid.TriggerGenericGridChanged(neighbourNode.x, neighbourNode.z);
+                    if(i == 3 - 1 && !graphVertices.Contains(neighbourNode))
+                    {
+                        checkerNode.connectedFromNodes.Add(neighbourNode);
+                        grid.TriggerGenericGridChanged(checkerNode.x, checkerNode.z);
+                    }
+                    if(!graphVertices.Contains(neighbourNode) && !replacer.Contains(neighbourNode))
+                    {
+                        Unit blocker = selectedUnitmap.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z);
+                        neighbourNode.SetMoveCost(selectedTilemap.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z).GetMovementPenaltyType((int)type));
+                        if(neighbourNode.moveCost == 0 || (blocker != null && blocker.GetTeam() != unit.GetTeam())) neighbourNode.SetMoveCost(4096);
+                        replacer.Add(neighbourNode);
+                    }
+                }
+                graphVertices.Add(checkerNode);
+            }
+            checkerList.Clear();
+            checkerList.AddRange(replacer);
+            replacer.Clear();
+        }
+        foreach(DijkstraNode remaining in checkerList)
+        {
+            graphVertices.Add(remaining);
+        }
+
+
+        replacer.AddRange(ApplyDijkstra(x, z, graphVertices, unit, selectedUnitmap, getWholeMap, true));
 
         return replacer;
     }

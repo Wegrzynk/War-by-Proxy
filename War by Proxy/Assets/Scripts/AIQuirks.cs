@@ -50,6 +50,7 @@ public class AIQuirks : MonoBehaviour
     {
         bool isDead = (mainManager.unitmap.AttackUnit(unit, bestAttackTarget, mainManager.damageMatrix, mainManager.tilemap.GetGrid().GetGridObject(bestAttackTarget.GetX(), bestAttackTarget.GetZ()).GetDefence()));
         unit.AmmoCost(1);
+        int team = bestAttackTarget.GetTeam()-1;
         if(isDead)
         {
             GameObject destroyable = GameObject.Find(bestAttackTarget.ToString() + bestAttackTarget.GetX() + bestAttackTarget.GetZ());
@@ -63,11 +64,16 @@ public class AIQuirks : MonoBehaviour
             }
             mainManager.playersInMatch[bestAttackTarget.GetTeam()-1].RemoveUnit(bestAttackTarget);
             mainManager.unitmap.GetGrid().SetGridObject(bestAttackTarget.GetX(), bestAttackTarget.GetZ(), null);
+            if(mainManager.playersInMatch[team].GetUnloadedUnits().Count == 0)
+            {
+                mainManager.GameLost(team);
+            }
         }
         else if(Mathf.Abs((float)(bestAttackTarget.GetX() - unit.GetX())) + Mathf.Abs((float)(bestAttackTarget.GetZ() - unit.GetZ())) == 1 && bestAttackTarget.GetMaxRange() == 0)
         {
             bool isDeadAttacker = (mainManager.unitmap.AttackUnit(bestAttackTarget, unit, mainManager.damageMatrix, mainManager.tilemap.GetGrid().GetGridObject(unit.GetX(), unit.GetZ()).GetDefence()));
             bestAttackTarget.AmmoCost(1);
+            team = unit.GetTeam()-1;
             if(isDeadAttacker)
             {
                 GameObject destroyableAttacker = GameObject.Find(unit.ToString() + unit.GetX() + unit.GetZ());
@@ -81,6 +87,10 @@ public class AIQuirks : MonoBehaviour
                 }
                 mainManager.playersInMatch[unit.GetTeam()-1].RemoveUnit(unit);
                 mainManager.unitmap.GetGrid().SetGridObject(unit.GetX(), unit.GetZ(), null);
+                if(mainManager.playersInMatch[team].GetUnloadedUnits().Count == 0)
+                {
+                    mainManager.GameLost(team);
+                }
             }
         }
     }
@@ -155,7 +165,7 @@ public class AIQuirks : MonoBehaviour
 
     private void AISupply(Unit unit, SinglePlayerManager mainManager)
     {
-        List<Unit> supplytargets = new List<Unit>(mainManager.unitmap.GetFriendlyUnitsInRange(unit.GetX(), unit.GetZ()));
+        List<Unit> supplytargets = new List<Unit>(mainManager.unitmap.GetFriendlyUnitsInRange(unit.GetX(), unit.GetZ(), unit));
         foreach(Unit target in supplytargets)
         {
             target.Refuel();
@@ -166,8 +176,8 @@ public class AIQuirks : MonoBehaviour
     private void AIRecruit(Unit.UnitType type, int x, int z, int team, SinglePlayerManager mainManager)
     {
         Unit un = mainManager.unitTypes[(int)type];
-        un.SetUnitType(un.GetUnitType(), team);
-        mainManager.unitmap.InsertUnit(x, z, type, team, un.GetAmmo(), un.GetFuel(), null, 0);
+        un.SetUnitType(un.GetUnitType(), team+1);
+        mainManager.unitmap.InsertUnit(x, z, type, team+1, un.GetAmmo(), un.GetFuel(), null, 0);
         switch(type)
         {
             case Unit.UnitType.Infantry: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(6); break;
@@ -177,12 +187,13 @@ public class AIQuirks : MonoBehaviour
             case Unit.UnitType.Tship: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(0); break;
             default: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(RNGbehaviour((int)type)); break;
         }
-        mainManager.UnitInstantiate(un, x, z, team);
+        mainManager.UnitInstantiate(un, x, z, team+1);
+        mainManager.playersInMatch[team].unitTypeCount[(int)type]++;
         mainManager.playersInMatch[team].AddUnit(mainManager.unitmap.GetGrid().GetGridObject(x, z));
         mainManager.playersInMatch[team].ChangeFunds(-(mainManager.unitmap.GetGrid().GetGridObject(x, z).GetCost()));
     }
 
-    private int RNGbehaviour(int type)
+    public int RNGbehaviour(int type)
     {
         int percentage = rng.Next(1, 101);
         for(int i = 0; i < 5; i++)
@@ -260,7 +271,7 @@ public class AIQuirks : MonoBehaviour
         foreach(DijkstraNode possibleMove in unitMovementGraph)
         {
             VIPcounter = 0;
-            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z))
+            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z, unit))
             {
                 if(regularTroops || ((landVIPs && (friendlyChecker.GetUnitType() == Unit.UnitType.Infantry || friendlyChecker.GetUnitType() == Unit.UnitType.Mech))
                 || (!landVIPs && (friendlyChecker.GetUnitType() == Unit.UnitType.Tship))))
@@ -313,7 +324,7 @@ public class AIQuirks : MonoBehaviour
         {
             supplyCounter = 0;
             criticalSupplyCounter = 0;
-            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z))
+            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z, unit))
             {
                 supplyCounter++;
                 if(friendlyChecker.GetCurrentFuel() <= friendlyChecker.GetFuel() / 5)
@@ -327,7 +338,7 @@ public class AIQuirks : MonoBehaviour
                 maxSupply = supplyCounter;
                 bestSupplyPosition = possibleMove;
             }
-            else if(criticalSupplyCounter == maxCriticalSupply && supplyCounter > maxSupply)
+            else if(criticalSupplyCounter == maxCriticalSupply && criticalSupplyCounter != 0 && supplyCounter > maxSupply)
             {
                 maxCriticalSupply = criticalSupplyCounter;
                 maxSupply = supplyCounter;
@@ -398,7 +409,7 @@ public class AIQuirks : MonoBehaviour
         {
             foreach(TileType tile in GetNeighbourNonAlliedBuildings(possibleMove.x, possibleMove.z, unit, mainManager))
             {
-                if(isReplacementNotLessImportant(securedBuildingTile, tile, mainManager))
+                if(mainManager.unitmap.GetGrid().GetGridObject(tile.GetX(), tile.GetZ()) == null && isReplacementNotLessImportant(securedBuildingTile, tile, mainManager))
                 {
                     securedStopTile = possibleMove;
                     securedBuildingTile = tile;
@@ -416,6 +427,29 @@ public class AIQuirks : MonoBehaviour
             returnValue = true;
         }
         return returnValue;
+    }
+
+    private bool getOffBuildingIfInfantryNearby(Unit unit, SinglePlayerManager mainManager)
+    {
+        List<DijkstraNode> infantryCheck = mainManager.getUnitMovementGraph(unit.GetX(), unit.GetZ(), true);
+        List<DijkstraNode> unitMovementGraph = mainManager.getUnitMovementGraph(unit.GetX(), unit.GetZ());
+
+        foreach(DijkstraNode checker in infantryCheck)
+        {
+            if(mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z) != null && mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z).GetTeam() == unit.GetTeam() && (mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z).GetUnitType() == Unit.UnitType.Infantry || mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z).GetUnitType() == Unit.UnitType.Mech))
+            {
+                foreach(DijkstraNode possibleMove in unitMovementGraph)
+                {
+                    if(mainManager.unitmap.GetGrid().GetGridObject(possibleMove.x, possibleMove.z) == null)
+                    {
+                        AIMove(unit, possibleMove, mainManager);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        return false;
     }
 
     private bool captureBuilding(Unit unit, SinglePlayerManager mainManager)
@@ -542,7 +576,7 @@ public class AIQuirks : MonoBehaviour
                 path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
                 foreach(PathNode node in path)
                 {
-                    if(node.gCost <= unit.GetMovementDistance())
+                    if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
                     {
                         selectedTile = node;
                     }
@@ -584,7 +618,7 @@ public class AIQuirks : MonoBehaviour
                 path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
                 foreach(PathNode node in path)
                 {
-                    if(node.gCost <= unit.GetMovementDistance())
+                    if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
                     {
                         selectedTile = node;
                     }
@@ -610,7 +644,7 @@ public class AIQuirks : MonoBehaviour
 
         foreach(DijkstraNode possibleMove in unitMovementGraph)
         {
-            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z))
+            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z, unit))
             {
                 if(!transport || (transport && (friendlyChecker.GetUnitType() == Unit.UnitType.Infantry || friendlyChecker.GetUnitType() == Unit.UnitType.Mech)))
                 {
@@ -622,7 +656,7 @@ public class AIQuirks : MonoBehaviour
                 path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
                 foreach(PathNode node in path)
                 {
-                    if(node.gCost <= unit.GetMovementDistance())
+                    if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
                     {
                         selectedTile = node;
                     }
@@ -652,7 +686,7 @@ public class AIQuirks : MonoBehaviour
                 path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
                 foreach(PathNode node in path)
                 {
-                    if(node.gCost <= unit.GetMovementDistance())
+                    if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
                     {
                         selectedTile = node;
                     }
@@ -678,7 +712,7 @@ public class AIQuirks : MonoBehaviour
 
         foreach(DijkstraNode possibleMove in unitMovementGraph)
         {
-            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z))
+            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z, unit))
             {
                 if(friendlyChecker.GetLoadCapacity() > 0 && friendlyChecker.GetLoadedUnits()[friendlyChecker.GetLoadCapacity() - 1] == null)
                 {
@@ -825,9 +859,12 @@ public class AIQuirks : MonoBehaviour
         SinglePlayerManager mainManager = mainScriptHolder.GetComponent<SinglePlayerManager>();
         bool checker = false;
 
-        //Condition #1 - Is already occupying an enemy production building, will attack without moving if target is available
+        //Condition #1 - Is already occupying an enemy production building, will move out of the way for nearby infantry or will attack without moving if target is available and no infantry found
         if(isEnemyProductionBuilding(unit.GetX(), unit.GetZ(), unit, mainManager))
         {
+            checker = getOffBuildingIfInfantryNearby(unit, mainManager);
+            if(checker) return;
+
             if(unit.GetAmmo() > 0)
             {
                 attackEnemiesInRangeStationary(unit, mainManager);
@@ -889,8 +926,17 @@ public class AIQuirks : MonoBehaviour
         bool checker = false;
 
         //Condition #1 - is already securing a non-allied building, will attack enemies in range without moving
-        checker = attackEnemiesInRangeStationary(unit, mainManager);
-        if(checker) return;
+        if(isNonAlliedBuilding(unit.GetX(), unit.GetZ(), unit, mainManager))
+        {
+            checker = getOffBuildingIfInfantryNearby(unit, mainManager);
+            if(checker) return;
+            
+            if(unit.GetAmmo() > 0)
+            {
+                attackEnemiesInRangeStationary(unit, mainManager);
+            }
+            return;
+        }
 
         //Condition #2 - if non-allied buildings are in range, will move onto one with best enemy engagement, otherwise the last checked one
         checker = moveOntoNonAlliedBuilding(unit, mainManager);
@@ -900,8 +946,8 @@ public class AIQuirks : MonoBehaviour
         //It would be super sick if i could implement zoning function
         moveTowardsNonAlliedBuilding(unit, mainManager);
 
-        //Condition #4 - if non-allied non-secured buildings not found on map, does nothing because the game is pretty much over at this point
-        //Yep, literally nothing
+        //Condition #4 - if non-allied non-secured buildings not found on map, defaults to aggressive behaviour as a cleanup duty
+        AggressiveBehaviour(unit);
     }
 
     public void AggressiveBehaviour(Unit unit)
@@ -1007,12 +1053,18 @@ public class AIQuirks : MonoBehaviour
 
         //Condition #1 - if transporting a unit (infantry/mech) and non-allied building in range, will move to a neighbouring tile to the building
         //With multiple buildings, standard type priority (HQ > MilBase > Airport > Port > other) and the furthest of the same type is picked.
-        checker = moveNextToNonAlliedBuilding(unit, mainManager);
-        if(checker) return;
+        if(unit.GetLoadedUnits()[0] != null)
+        {
+            checker = moveNextToNonAlliedBuilding(unit, mainManager);
+            if(checker) return;
+        }
 
         //Condition #2 - if transporting a unit (infantry/mech) and no non-allied building in range, will move towards the nearest non-allied building on map
-        checker = moveTowardsNonAlliedBuilding(unit, mainManager);
-        if(checker) return;
+        if(unit.GetLoadedUnits()[0] != null)
+        {
+            checker = moveTowardsNonAlliedBuilding(unit, mainManager);
+            if(checker) return;
+        }
 
         //Condition #3 - if not transporting a unit and allied infantry/mech in range, will move to a neighbouring tile to the infantry/mech
         checker = moveToVIPsInRange(unit, mainManager, true, false);
@@ -1025,39 +1077,71 @@ public class AIQuirks : MonoBehaviour
         //Yep, literally nothing
     }
 
-    //---RECRUIT FUNCTIONS
+    //---RECRUIT FUNCTION
     public void AIRecruitUnit(int x, int z, int type, SinglePlayerManager mainManager)
     {
+        //Debug.Log("Attempting to recruit from building on coordinates: " + x + "," + z);
         List<Unit> recruits = new List<Unit>();
         Unit currentlySelected = null;
         int team = ((Building)mainManager.tilemap.GetGrid().GetGridObject(x, z)).GetTeam() - 1;
         switch(type)
         {
             case 1:
+                //Debug.Log("Selected building is a Military Base");
                 recruits = mainManager.militaryBaseRecruits;
                 break;
             case 2:
+                //Debug.Log("Selected building is an Airport");
                 recruits = mainManager.airportRecruits;
                 break;
             case 3:
+                //Debug.Log("Selected building is a Port");
                 recruits = mainManager.portRecruits;
                 break;
             default:
+                //Debug.Log("Something went wrong when selecting building type");
                 recruits = mainManager.militaryBaseRecruits;
                 break;
         }
 
+        if(type == 1 && 1000 <= mainManager.playersInMatch[team].GetFunds() && mainManager.playersInMatch[team].unitTypeCount[9] < minFoot)
+        {
+            AIRecruit(Unit.UnitType.Infantry, x, z, team, mainManager);
+            //Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
+            return;
+        }
+
         foreach(Unit unit in recruits)
         {
+            //Debug.Log("Checking if unit cost = " + unit.GetCost() + " is not greater than AI funds = " + mainManager.playersInMatch[team].GetFunds());
             if(unit.GetCost() <= mainManager.playersInMatch[team].GetFunds())
             {
-                
+                if(mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] == 0)
+                {
+                    currentlySelected = unit;
+                }
+                else if((float)mainManager.playersInMatch[team].GetUnits().Count * ((float)AIPreset[unit.GetIntFromUnit(),5] / 100) > mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()])
+                {
+                    if(currentlySelected != null && AIPreset[unit.GetIntFromUnit(),5] >= AIPreset[currentlySelected.GetIntFromUnit(),5])
+                    {
+                        currentlySelected = unit;
+                    }
+                    else if(currentlySelected == null)
+                    {
+                        currentlySelected = unit;
+                    }
+                }
             }
-            else if(currentlySelected != null)
+            else
             {
-                AIRecruit(unit.GetUnitType(), x, z, team, mainManager);
-                return;
+                break;
             }
+        }
+
+        if(currentlySelected != null)
+        {
+            AIRecruit(currentlySelected.GetUnitType(), x, z, team, mainManager);
+            //Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
         }
     }
 }

@@ -53,6 +53,7 @@ public class SinglePlayerManager : MonoBehaviour
     List<Unit> targetables = new List<Unit>();
     List<Unit> supplyTargetables = new List<Unit>();
     public List<Player> playersInMatch = new List<Player>();
+    public AIQuirks AI;
 
     public int debugMode = 2;
     private int localPlayerID;
@@ -121,8 +122,8 @@ public class SinglePlayerManager : MonoBehaviour
 
     public void InitPlayers()
     {
-        playersInMatch.Add(new Player(1, tilemap, unitmap));
-        playersInMatch.Add(new Player(2, tilemap, unitmap));
+        playersInMatch.Add(new Player(1, tilemap, unitmap, AI));
+        playersInMatch.Add(new Player(2, tilemap, unitmap, AI));
         localTurnSystem.TurnInit(playersInMatch[turnCounter]);
     }
 
@@ -380,7 +381,7 @@ public class SinglePlayerManager : MonoBehaviour
         {
             Destroy(selected);
         }
-        foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z))
+        foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)))
         {
             if(potentialTransport.GetLoadCapacity() != 0 && potentialTransport.GetLoadedUnits()[potentialTransport.GetLoadCapacity()-1] == null)
             {
@@ -498,7 +499,7 @@ public class SinglePlayerManager : MonoBehaviour
         //photonView.RPC("CheckVictoryConditions", RpcTarget.Others);
         if(playerID == localPlayerID)
         {
-            canvas.GetComponent<GameGUI>().ShowGameEndDialog(false);
+            canvas.GetComponent<GameGUI>().ShowGameEndDialog(false, true);
             menuUp = true;
         }
         else
@@ -547,7 +548,7 @@ public class SinglePlayerManager : MonoBehaviour
         }
         if(victory && playerID == localPlayerID)
         {
-            canvas.GetComponent<GameGUI>().ShowGameEndDialog(victory);
+            canvas.GetComponent<GameGUI>().ShowGameEndDialog(victory, true);
             foreach(Player playa in playersInMatch)
             {
                 if(playa.GetTeam() == localPlayerID + 1) SynchronizeGrantWin(localPlayerID + 1);
@@ -586,7 +587,7 @@ public class SinglePlayerManager : MonoBehaviour
 
     public void SynchronizeSupply(int x, int z)
     {
-        List<Unit> supplytargets = new List<Unit>(unitmap.GetFriendlyUnitsInRange(x, z));
+        List<Unit> supplytargets = new List<Unit>(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)));
         foreach(Unit target in supplytargets)
         {
             target.Refuel();
@@ -610,6 +611,62 @@ public class SinglePlayerManager : MonoBehaviour
             turnCounter++;
         }
         localTurnSystem.TurnInit(playersInMatch[turnCounter]);
+        if(turnCounter == 1)
+        {
+            List<Unit> unitsToMove = new List<Unit>(playersInMatch[turnCounter].GetUnloadedUnits());
+            //AI logic
+            Debug.Log("List of AI unloaded units this turn:");
+            string list = "";
+            foreach(Unit unit in unitsToMove)
+            {
+                list += unit.ToString() + unit.GetX() + unit.GetZ() + " - ";
+            }
+            Debug.Log(list);
+
+            foreach(Unit unit in unitsToMove)
+            {
+                switch(unit.GetAIbehaviour())
+                {
+                    case 0: AI.StationaryBehaviour(unit); break;
+                    case 1: AI.OccupyProductionBehaviour(unit); break;
+                    case 2: AI.VIPCoverBehaviour(unit); break;
+                    case 3: AI.SecureBuildingBehaviour(unit); break;
+                    case 4: AI.AggressiveBehaviour(unit); break;
+                    case 5: AI.DefensiveBehaviour(unit); break;
+                    case 6: AI.InfantryBehaviour(unit); break;
+                    case 7: AI.TransportLandBehaviour(unit); break;
+                    case 8: AI.TransportAirBehaviour(unit); break;
+                }
+            }
+            foreach(Building building in playersInMatch[turnCounter].GetBuildings())
+            {
+                if(unitmap.GetGrid().GetGridObject(building.GetX(), building.GetZ()) == null)
+                {
+                    if(building.GetType().Equals(typeof(MilitaryBase)))
+                    {
+                        AI.AIRecruitUnit(building.GetX(), building.GetZ(), 1, this);
+                    }
+                    else if(building.GetType().Equals(typeof(Airport)))
+                    {
+                        AI.AIRecruitUnit(building.GetX(), building.GetZ(), 2, this);
+                    }
+                    else if(building.GetType().Equals(typeof(Port)))
+                    {
+                        AI.AIRecruitUnit(building.GetX(), building.GetZ(), 3, this);
+                    }
+                }
+            }
+
+            Debug.Log("List of AI unloaded units after the turn:");
+            list = "";
+            foreach(Unit unit in playersInMatch[turnCounter].GetUnloadedUnits())
+            {
+                list += unit.ToString() + unit.GetX() + unit.GetZ() + " - ";
+            }
+            Debug.Log(list);
+
+            SynchronizeTurn();
+        }
     }
 
     private void SynchronizeGrantWin(int team)
@@ -624,6 +681,11 @@ public class SinglePlayerManager : MonoBehaviour
     public List<DijkstraNode> getUnitMovementGraph(int localx, int localz)
     {
         return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, false);
+    }
+
+    public List<DijkstraNode> getUnitMovementGraph(int localx, int localz, bool infantryCheck)
+    {
+        return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), Unit.UnitType.Infantry, tilemap, unitmap, false, false);
     }
 
     public List<DijkstraNode> getMapReachabilityGraph(int localx, int localz)
@@ -893,15 +955,15 @@ public class SinglePlayerManager : MonoBehaviour
                                 {
                                     actioncapture = true;
                                 }
-                                if(unitmap.GetGrid().GetGridObject(x, z).GetUnitType() == Unit.UnitType.APC && unitmap.GetFriendlyUnitsInRange(x, z).Count > 0)
+                                if(unitmap.GetGrid().GetGridObject(x, z).GetUnitType() == Unit.UnitType.APC && unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)).Count > 0)
                                 {
                                     supplyTargetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    supplyTargetables.AddRange(unitmap.GetFriendlyUnitsInRange(x, z));
+                                    supplyTargetables.AddRange(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)));
                                     if(supplyTargetables.Count > 1) actionsupply = true;
                                 }
-                                if(unitmap.GetFriendlyUnitsInRange(x, z).Count > 0)
+                                if(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)).Count > 0)
                                 {
-                                    foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z))
+                                    foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)))
                                     {
                                         if(potentialTransport.GetLoadCapacity() != 0 && potentialTransport.GetLoadedUnits()[potentialTransport.GetLoadCapacity()-1] == null)
                                         {
@@ -946,6 +1008,7 @@ public class SinglePlayerManager : MonoBehaviour
                             canvas.GetComponent<GameGUI>().HideAttackInfo();
                             bool isDead = (unitmap.AttackUnit(unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()), unitmap.GetGrid().GetGridObject(x, z), damageMatrix, tilemap.GetGrid().GetGridObject(x, z).GetDefence()));
                             unitSelected = "false";
+                            int team = unitmap.GetGrid().GetGridObject(x, z).GetTeam()-1;
                             foreach(GameObject selected in selectedTiles)
                             {
                                 Destroy(selected);
@@ -968,11 +1031,16 @@ public class SinglePlayerManager : MonoBehaviour
                                 }
                                 playersInMatch[unitmap.GetGrid().GetGridObject(x, z).GetTeam()-1].RemoveUnit(unitmap.GetGrid().GetGridObject(x, z));
                                 unitmap.GetGrid().SetGridObject(x, z, null);
+                                if(playersInMatch[team].GetUnloadedUnits().Count == 0)
+                                {
+                                    GameLost(team);
+                                }
                             }
                             else if(Mathf.Abs((float)(x - targetables[0].GetX())) + Mathf.Abs((float)(z - targetables[0].GetZ())) == 1 && unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() == 0)
                             {
                                 bool isDeadAttacker = (unitmap.AttackUnit(unitmap.GetGrid().GetGridObject(x, z), unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()), damageMatrix, tilemap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()).GetDefence()));
                                 Unit defender = unitmap.GetGrid().GetGridObject(x, z);
+                                team = unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()).GetTeam()-1;
                                 defender.AmmoCost(1);
                                 if(isDeadAttacker)
                                 {
@@ -987,6 +1055,10 @@ public class SinglePlayerManager : MonoBehaviour
                                     }
                                     playersInMatch[unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()).GetTeam()-1].RemoveUnit(unitmap.GetGrid().GetGridObject(targetables[0].GetX(), targetables[0].GetZ()));
                                     unitmap.GetGrid().SetGridObject(targetables[0].GetX(), targetables[0].GetZ(), null);
+                                    if(playersInMatch[team].GetUnloadedUnits().Count == 0)
+                                    {
+                                        GameLost(team);
+                                    }
                                 }
                             }
                         }
@@ -1059,12 +1131,12 @@ public class SinglePlayerManager : MonoBehaviour
                         TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
                         if(localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(x, z)))
                         {
-                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, true);
+                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, false);
                             if (graph != null)
                             {
                                 for (int i = 0; i < graph.Count; i++)
                                 {
-                                    Debug.Log(graph[i].nodePosition() + " = " + graph[i].moveCost);
+                                    //Debug.Log(graph[i].nodePosition() + " = " + graph[i].moveCost);
                                     selectedTiles.Add(Instantiate(selectedTile, new Vector3(graph[i].x * 2, 0.1f, graph[i].z * 2), Quaternion.identity, map));
                                 }
                                 unitSelected = "move";

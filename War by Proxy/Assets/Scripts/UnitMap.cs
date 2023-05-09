@@ -162,7 +162,7 @@ public class Unitmap
         return targetableUnits;
     }
 
-    public List<Unit> GetFriendlyUnitsInRange(int x, int z)
+    public List<Unit> GetFriendlyUnitsInRange(int x, int z, Unit unit)
     {
         int minRange = 1;
         int maxRange = 1;
@@ -175,7 +175,7 @@ public class Unitmap
             {
                 if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
                 {
-                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() == grid.GetGridObject(x, z).GetTeam())
+                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetTeam() == unit.GetTeam())
                     {
                         targetableUnits.Add(grid.GetGridObject(x+i, z+j));
                     }

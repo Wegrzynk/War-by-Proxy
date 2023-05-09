@@ -125,8 +125,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public void InitPlayers()
     {
-        playersInMatch.Add(new Player(1, tilemap, unitmap));
-        playersInMatch.Add(new Player(2, tilemap, unitmap));
+        playersInMatch.Add(new Player(1, tilemap, unitmap, null));
+        playersInMatch.Add(new Player(2, tilemap, unitmap, null));
         localTurnSystem.TurnInit(playersInMatch[turnCounter]);
     }
 
@@ -387,7 +387,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             Destroy(selected);
         }
-        foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z))
+        foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)))
         {
             if(potentialTransport.GetLoadCapacity() != 0 && potentialTransport.GetLoadedUnits()[potentialTransport.GetLoadCapacity()-1] == null)
             {
@@ -505,7 +505,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         photonView.RPC("RemovePlayerFromGame", RpcTarget.All, playerID);
         photonView.RPC("CheckVictoryConditions", RpcTarget.Others);
-        canvas.GetComponent<GameGUI>().ShowGameEndDialog(false);
+        canvas.GetComponent<GameGUI>().ShowGameEndDialog(false, false);
         menuUp = true;
     }
 
@@ -551,7 +551,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         if(victory)
         {
-            canvas.GetComponent<GameGUI>().ShowGameEndDialog(victory);
+            canvas.GetComponent<GameGUI>().ShowGameEndDialog(victory, false);
             foreach(Player playa in playersInMatch)
             {
                 if(playa.GetTeam() == localPlayerID + 1) photonView.RPC("SynchronizeGrantWin", RpcTarget.All, localPlayerID + 1);
@@ -646,7 +646,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     private void SynchronizeSupply(int x, int z)
     {
-        List<Unit> supplytargets = new List<Unit>(unitmap.GetFriendlyUnitsInRange(x, z));
+        List<Unit> supplytargets = new List<Unit>(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)));
         foreach(Unit target in supplytargets)
         {
             target.Refuel();
@@ -964,15 +964,15 @@ public class GameManager : MonoBehaviourPunCallbacks
                                 {
                                     actioncapture = true;
                                 }
-                                if(unitmap.GetGrid().GetGridObject(x, z).GetUnitType() == Unit.UnitType.APC && unitmap.GetFriendlyUnitsInRange(x, z).Count > 0)
+                                if(unitmap.GetGrid().GetGridObject(x, z).GetUnitType() == Unit.UnitType.APC && unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)).Count > 0)
                                 {
                                     supplyTargetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    supplyTargetables.AddRange(unitmap.GetFriendlyUnitsInRange(x, z));
+                                    supplyTargetables.AddRange(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)));
                                     if(supplyTargetables.Count > 1) actionsupply = true;
                                 }
-                                if(unitmap.GetFriendlyUnitsInRange(x, z).Count > 0)
+                                if(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)).Count > 0)
                                 {
-                                    foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z))
+                                    foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)))
                                     {
                                         if(potentialTransport.GetLoadCapacity() != 0 && potentialTransport.GetLoadedUnits()[potentialTransport.GetLoadCapacity()-1] == null)
                                         {

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 using Photon.Pun;
 
@@ -341,7 +342,7 @@ public class GameGUI : MonoBehaviourPunCallbacks
         matchoverview.SetActive(false);
     }
 
-    public void ShowGameEndDialog(bool isvictory)
+    public void ShowGameEndDialog(bool isvictory, bool singlePlayer)
     {
         if(isvictory)
         {
@@ -351,13 +352,20 @@ public class GameGUI : MonoBehaviourPunCallbacks
         {
             gameenddialog.transform.Find("Description").Find("Text").GetComponent<TextMeshProUGUI>().text = "DEFEAT!";
         }
-        gameenddialog.transform.Find("ReturnButton").GetComponent<Button>().onClick.AddListener(() => LeaveGame());
+        gameenddialog.transform.Find("ReturnButton").GetComponent<Button>().onClick.AddListener(() => LeaveGame(singlePlayer));
         gameenddialog.SetActive(true);
     }
 
-    public void LeaveGame()
+    public void LeaveGame(bool singlePlayer)
     {
-        if(PhotonNetwork.NetworkClientState != Photon.Realtime.ClientState.Leaving) PhotonNetwork.LeaveRoom();
+        if(singlePlayer)
+        {
+            SceneManager.LoadScene(0);
+        }
+        else
+        {
+            if(PhotonNetwork.NetworkClientState != Photon.Realtime.ClientState.Leaving) PhotonNetwork.LeaveRoom();
+        }
     }
 
     public override void OnLeftRoom()
