@@ -1116,7 +1116,7 @@ public class AIQuirks : MonoBehaviour
             //Debug.Log("Checking if unit cost = " + unit.GetCost() + " is not greater than AI funds = " + mainManager.playersInMatch[team].GetFunds());
             if(unit.GetCost() <= mainManager.playersInMatch[team].GetFunds())
             {
-                if(mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] == 0)
+                if(mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] == 0 && AIPreset[unit.GetIntFromUnit(),5] != 0)
                 {
                     currentlySelected = unit;
                 }
