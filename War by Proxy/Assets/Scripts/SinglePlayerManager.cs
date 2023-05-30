@@ -613,7 +613,7 @@ public class SinglePlayerManager : MonoBehaviour
         localTurnSystem.TurnInit(playersInMatch[turnCounter]);
         if(turnCounter == 1)
         {
-            List<Unit> unitsToMove = new List<Unit>(playersInMatch[turnCounter].GetUnloadedUnits());
+            List<Unit> unitsToMove = AI.sortUnitMovementList(new List<Unit>(playersInMatch[turnCounter].GetUnloadedUnits()), this);
             //AI logic
             Debug.Log("List of AI unloaded units this turn:");
             string list = "";

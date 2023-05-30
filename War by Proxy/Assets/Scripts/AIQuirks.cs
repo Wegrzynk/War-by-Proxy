@@ -8,24 +8,24 @@ public class AIQuirks : MonoBehaviour
     public System.Random rng = new System.Random();
     public int[,] AIPreset = new int[20,6]
     {
-        { 10, 10, 40, 30, 10, 7},   // AATank,
+        { 10, 10, 40, 40, 0, 7},   // AATank,
         { 0, 0, 0, 0, 0, 5},   // APC,
         { 0, 0, 100, 0, 0, 10},   // Artillery,
-        { 0, 10, 60, 10, 20, 10},   // Heli,
+        { 0, 10, 60, 30, 0, 10},   // Heli,
         { 20, 0, 50, 30, 0, 0},   // Battleship,
-        { 10, 0, 50, 10, 30, 20},   // Bomber,
+        { 10, 0, 50, 40, 0, 20},   // Bomber,
         { 0, 0, 30, 0, 70, 0},   // Carrier,
-        { 0, 0, 60, 20, 20, 0},   // Cruiser,
-        { 0, 0, 30, 30, 40, 10},   // Fighter,
+        { 0, 0, 60, 40, 0, 0},   // Cruiser,
+        { 0, 0, 30, 70, 0, 10},   // Fighter,
         { 0, 0, 0, 0, 0, 16},   // Infantry,
         { 0, 0, 0, 0, 0, 0},   // Tship,
-        { 10, 10, 20, 20, 40, 10},   // Midtank,
+        { 10, 10, 30, 50, 0, 10},   // Midtank,
         { 0, 0, 0, 0, 0, 10},   // Mech,
-        { 10, 10, 20, 20, 40, 5},   // Heavytank,
-        { 0, 0, 30, 10, 60, 5},   // Missile,
+        { 10, 10, 30, 50, 0, 5},   // Heavytank,
+        { 0, 0, 90, 10, 0, 5},   // Missile,
         { 0, 0, 100, 0, 0, 9},   // Recon,
-        { 0, 0, 90, 0, 10, 11},   // Rocket,
-        { 0, 0, 60, 20, 20, 0},   // Sub,
+        { 0, 0, 90, 10, 0, 11},   // Rocket,
+        { 0, 0, 60, 40, 0, 0},   // Sub,
         { 0, 0, 0, 0, 0, 5},   // Theli,
         { 0, 0, 100, 0, 0, 17}   // Tank
     };
@@ -452,6 +452,28 @@ public class AIQuirks : MonoBehaviour
         return false;
     }
 
+    private bool getOffBuildingIfInfantryNearbyCheck(Unit unit, SinglePlayerManager mainManager)
+    {
+        List<DijkstraNode> infantryCheck = mainManager.getUnitMovementGraph(unit.GetX(), unit.GetZ(), true);
+        List<DijkstraNode> unitMovementGraph = mainManager.getUnitMovementGraph(unit.GetX(), unit.GetZ());
+
+        foreach(DijkstraNode checker in infantryCheck)
+        {
+            if(mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z) != null && mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z).GetTeam() == unit.GetTeam() && (mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z).GetUnitType() == Unit.UnitType.Infantry || mainManager.unitmap.GetGrid().GetGridObject(checker.x, checker.z).GetUnitType() == Unit.UnitType.Mech))
+            {
+                foreach(DijkstraNode possibleMove in unitMovementGraph)
+                {
+                    if(mainManager.unitmap.GetGrid().GetGridObject(possibleMove.x, possibleMove.z) == null)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        return false;
+    }
+
     private bool captureBuilding(Unit unit, SinglePlayerManager mainManager)
     {
         List<DijkstraNode> unitMovementGraph = mainManager.getUnitMovementGraph(unit.GetX(), unit.GetZ());
@@ -758,6 +780,47 @@ public class AIQuirks : MonoBehaviour
             }
         }
         return true;
+    }
+
+    public List<Unit> sortUnitMovementList(List<Unit> unitsToMove, SinglePlayerManager mainManager)
+    {
+        List<Unit> sortedList = new List<Unit>();
+        int index;
+        foreach(Unit unit in unitsToMove)
+        {
+            index = 0;
+            foreach(Unit processedUnit in sortedList)
+            {
+                if(getBasicPriority(unit, mainManager) > getBasicPriority(processedUnit, mainManager))
+                {
+                    index++;
+                }
+            }
+            //Debug.Log("Inserting " + unit.getst)
+            sortedList.Insert(index, unit);
+        }
+        return sortedList;
+    }
+
+    private int getBasicPriority(Unit unit, SinglePlayerManager mainManager)
+    {
+        if((unit.GetAIbehaviour() == 1 || unit.GetAIbehaviour() == 3) && isNonAlliedBuilding(unit.GetX(), unit.GetZ(), unit, mainManager) && getOffBuildingIfInfantryNearbyCheck(unit, mainManager))
+        {
+            return 1;
+        }
+        if(unit.GetUnitType() == Unit.UnitType.Infantry || unit.GetUnitType() == Unit.UnitType.Mech)
+        {
+            return 2;
+        }
+        if(unit.GetUnitType() == Unit.UnitType.APC || unit.GetUnitType() == Unit.UnitType.Theli || unit.GetUnitType() == Unit.UnitType.Tship)
+        {
+            return 3;
+        }
+        if(unit.GetMaxRange() > 0)
+        {
+            return 4;
+        }
+        return 5;
     }
 
     private bool isEnemyProductionBuilding(int x, int z, Unit unit, SinglePlayerManager mainManager)
