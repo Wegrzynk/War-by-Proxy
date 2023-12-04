@@ -615,13 +615,13 @@ public class SinglePlayerManager : MonoBehaviour
         {
             List<Unit> unitsToMove = AI.sortUnitMovementList(new List<Unit>(playersInMatch[turnCounter].GetUnloadedUnits()), this);
             //AI logic
-            Debug.Log("List of AI unloaded units this turn:");
+            //Debug.Log("List of AI unloaded units this turn:");
             string list = "";
             foreach(Unit unit in unitsToMove)
             {
                 list += unit.ToString() + unit.GetX() + unit.GetZ() + " - ";
             }
-            Debug.Log(list);
+            //Debug.Log(list);
 
             foreach(Unit unit in unitsToMove)
             {
@@ -657,13 +657,13 @@ public class SinglePlayerManager : MonoBehaviour
                 }
             }
 
-            Debug.Log("List of AI unloaded units after the turn:");
+            //Debug.Log("List of AI unloaded units after the turn:");
             list = "";
             foreach(Unit unit in playersInMatch[turnCounter].GetUnloadedUnits())
             {
                 list += unit.ToString() + unit.GetX() + unit.GetZ() + " - ";
             }
-            Debug.Log(list);
+            //Debug.Log(list);
 
             SynchronizeTurn();
         }
@@ -1131,6 +1131,12 @@ public class SinglePlayerManager : MonoBehaviour
                         TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
                         if(localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(x, z)))
                         {
+                            /*Debug.Log(localTurnSystem.GetUnitsAwaitingOrders().Count);
+                            foreach(Unit loadeed in localTurnSystem.GetUnitsAwaitingOrders())
+                            {
+                                Debug.Log(loadeed.ToString());
+                            }
+                            Debug.Log("Found unit " + unitmap.GetGrid().GetGridObject(x, z) + " on coordinates " + x + "." + z);*/
                             graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, false);
                             if (graph != null)
                             {

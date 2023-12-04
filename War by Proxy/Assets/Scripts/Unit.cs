@@ -118,6 +118,10 @@ public class Unit
         this.cost = unitTypeValues.cost;
         this.loadCapacity = unitTypeValues.loadCapacity;
         this.loadedUnits = new Unit[unitTypeValues.loadCapacity];
+        for(int i=0;i<unitTypeValues.loadCapacity;i++)
+        {
+            this.loadedUnits[i] = null;
+        }
         this.upgradeCounter = 0;
         this.team = team;
     }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Player
@@ -52,6 +53,18 @@ public class Player
                             default: unitHelp.SetAIbehaviour(RNGreference.RNGbehaviour((int)unitHelp.GetUnitType())); break;
                         }
                     }
+                    if(unitHelp.GetLoadedUnits().Length > 0)
+                    {
+                        foreach(Unit loaded in unitHelp.GetLoadedUnits())
+                        {
+                            if(loaded != null)
+                            {
+                                Debug.Log("Found unit in coordinates" + x + "." + z + "?");
+                                unitTypeCount[unitHelp.GetIntFromUnit()]++;
+                                ownedLoadedUnits.Add(loaded);
+                            }
+                        }
+                    }
                     unitTypeCount[unitHelp.GetIntFromUnit()]++;
                     ownedUnits.Add(unitHelp);
                 }
@@ -73,11 +86,13 @@ public class Player
     public void AddUnit(Unit newUnit)
     {
         ownedUnits.Add(newUnit);
+        unitTypeCount[newUnit.GetIntFromUnit()]++;
     }
 
     public void AddLoadedUnit(Unit newUnit)
     {
         ownedLoadedUnits.Add(newUnit);
+        unitTypeCount[newUnit.GetIntFromUnit()]++;
     }
 
     public void AddBuilding(Building newBuilding)
@@ -88,11 +103,13 @@ public class Player
     public void RemoveUnit(Unit newUnit)
     {
         ownedUnits.Remove(newUnit);
+        unitTypeCount[newUnit.GetIntFromUnit()]--;
     }
 
     public void RemoveLoadedUnit(Unit newUnit)
     {
         ownedLoadedUnits.Remove(newUnit);
+        unitTypeCount[newUnit.GetIntFromUnit()]--;
     }
 
     public void RemoveBuilding(Building newBuilding)

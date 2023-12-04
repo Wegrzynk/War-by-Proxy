@@ -188,7 +188,6 @@ public class AIQuirks : MonoBehaviour
             default: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(RNGbehaviour((int)type)); break;
         }
         mainManager.UnitInstantiate(un, x, z, team+1);
-        mainManager.playersInMatch[team].unitTypeCount[(int)type]++;
         mainManager.playersInMatch[team].AddUnit(mainManager.unitmap.GetGrid().GetGridObject(x, z));
         mainManager.playersInMatch[team].ChangeFunds(-(mainManager.unitmap.GetGrid().GetGridObject(x, z).GetCost()));
     }
@@ -1143,54 +1142,61 @@ public class AIQuirks : MonoBehaviour
     //---RECRUIT FUNCTION
     public void AIRecruitUnit(int x, int z, int type, SinglePlayerManager mainManager)
     {
-        //Debug.Log("Attempting to recruit from building on coordinates: " + x + "," + z);
+        Debug.Log("Attempting to recruit from building on coordinates: " + x + "," + z);
         List<Unit> recruits = new List<Unit>();
         Unit currentlySelected = null;
         int team = ((Building)mainManager.tilemap.GetGrid().GetGridObject(x, z)).GetTeam() - 1;
         switch(type)
         {
             case 1:
-                //Debug.Log("Selected building is a Military Base");
+                Debug.Log("Selected building is a Military Base");
                 recruits = mainManager.militaryBaseRecruits;
                 break;
             case 2:
-                //Debug.Log("Selected building is an Airport");
+                Debug.Log("Selected building is an Airport");
                 recruits = mainManager.airportRecruits;
                 break;
             case 3:
-                //Debug.Log("Selected building is a Port");
+                Debug.Log("Selected building is a Port");
                 recruits = mainManager.portRecruits;
                 break;
             default:
-                //Debug.Log("Something went wrong when selecting building type");
+                Debug.Log("Something went wrong when selecting building type");
                 recruits = mainManager.militaryBaseRecruits;
                 break;
         }
 
+        Debug.Log("Buying infantry if infantry count " + mainManager.playersInMatch[team].unitTypeCount[9] + " is less than " + minFoot);
         if(type == 1 && 1000 <= mainManager.playersInMatch[team].GetFunds() && mainManager.playersInMatch[team].unitTypeCount[9] < minFoot)
         {
             AIRecruit(Unit.UnitType.Infantry, x, z, team, mainManager);
-            //Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
+            Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
             return;
         }
 
         foreach(Unit unit in recruits)
         {
+            Debug.Log("Currently checking unit: " + unit.ToString() + ", Current funds: " + mainManager.playersInMatch[team].GetFunds() + ", Current army count: " + mainManager.playersInMatch[team].GetUnits().Count);
             //Debug.Log("Checking if unit cost = " + unit.GetCost() + " is not greater than AI funds = " + mainManager.playersInMatch[team].GetFunds());
             if(unit.GetCost() <= mainManager.playersInMatch[team].GetFunds())
             {
+                Debug.Log("Count of units of this type in army: " + mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] + ". Expected: " + (float)mainManager.playersInMatch[team].GetUnits().Count * ((float)AIPreset[unit.GetIntFromUnit(),5] / 100));
                 if(mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] == 0 && AIPreset[unit.GetIntFromUnit(),5] != 0)
                 {
+                    Debug.Log("Both current unit type in army is 0 and this unit's rate is not 0");
                     currentlySelected = unit;
                 }
                 else if((float)mainManager.playersInMatch[team].GetUnits().Count * ((float)AIPreset[unit.GetIntFromUnit(),5] / 100) > mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()])
                 {
+                    Debug.Log("More units of this type required");
                     if(currentlySelected != null && AIPreset[unit.GetIntFromUnit(),5] >= AIPreset[currentlySelected.GetIntFromUnit(),5])
                     {
+                        Debug.Log("Currently selected's rate: " + AIPreset[currentlySelected.GetIntFromUnit(),5] + ", Checked unit's rate: " + AIPreset[unit.GetIntFromUnit(),5]);
                         currentlySelected = unit;
                     }
                     else if(currentlySelected == null)
                     {
+                        Debug.Log("Currently no selected unit. Assigning the checked one.");
                         currentlySelected = unit;
                     }
                 }
@@ -1204,7 +1210,7 @@ public class AIQuirks : MonoBehaviour
         if(currentlySelected != null)
         {
             AIRecruit(currentlySelected.GetUnitType(), x, z, team, mainManager);
-            //Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
+            Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
         }
     }
 }
