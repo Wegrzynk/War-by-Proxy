@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using ExitGames.Client.Photon.StructWrapping;
 
 public class SinglePlayerManager : MonoBehaviour
 {
@@ -219,8 +220,8 @@ public class SinglePlayerManager : MonoBehaviour
     {
         if (debugMode == 3 || debugMode == 4)
         {
-            tilemap.Load("Islander_Tiles");
-            unitmap.Load("Islander_Units");
+            tilemap.Load("TEST2_Tiles");
+            unitmap.Load("TEST2_Units");
             for (int z = 0; z < mapSizeZ; z++)
             {
                 for (int x = 0; x < mapSizeX; x++)
@@ -636,6 +637,7 @@ public class SinglePlayerManager : MonoBehaviour
                     case 6: AI.InfantryBehaviour(unit); break;
                     case 7: AI.TransportLandBehaviour(unit); break;
                     case 8: AI.TransportAirBehaviour(unit); break;
+                    case 9: AI.TransportSeaBehaviour(unit); break;
                 }
             }
             foreach(Building building in playersInMatch[turnCounter].GetBuildings())
@@ -691,6 +693,11 @@ public class SinglePlayerManager : MonoBehaviour
     public List<DijkstraNode> getMapReachabilityGraph(int localx, int localz)
     {
         return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, true);
+    }
+
+    public List<DijkstraNode> getMapReachabilityFromGoalGraph(int localx, int localz, Unit unit)
+    {
+        return pathmaking.CreateReachableGraph(localx, localz, unit, tilemap, unitmap, false, true);
     }
 
     public int getPotentialAttackValue(Unit attacker, Unit defender)
@@ -895,6 +902,13 @@ public class SinglePlayerManager : MonoBehaviour
                 }
                 GenerateMapVisual();
                 Debug.Log("Loaded!");
+            }
+
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                tilemap.Save("TEST2_Tiles");
+                unitmap.Save("TEST2_Units");
+                Debug.Log("Saved!");
             }
 
             if(Input.mousePosition.x < Screen.width / 4 && mainCamera.position.x > 14)
@@ -1288,6 +1302,39 @@ public class SinglePlayerManager : MonoBehaviour
                 }
             }
 
+            if(Input.GetKeyDown(KeyCode.A) && MouseClickDetector(ref x, ref z, ref tile))
+            {
+                if(unitmap.GetGrid().GetGridObject(x, z) != null)
+                {
+                    Debug.Log(unitmap.GetGrid().GetGridObject(x, z).GetAIbehaviour());
+                }
+            }
+
+            if(Input.GetKeyDown(KeyCode.T) && MouseClickDetector(ref x, ref z, ref tile))
+            {
+                if(unitmap.GetGrid().GetGridObject(x, z) != null)
+                {
+                    if(unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits() == null)
+                    {
+                        Debug.Log("Unit load array is null");
+                    }
+                    else
+                    {
+                        foreach(Unit leunit in unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits())
+                        {
+                            if(leunit == null)
+                            {
+                                Debug.Log("Unit is null");
+                            }
+                            else
+                            {
+                                Debug.Log(leunit.ToString());
+                            }
+                        }
+                    }
+                }
+            }
+
             if(unitSelected == "fire" && MouseClickDetector(ref x, ref z, ref tile) && menuUp == false)
             {
                 if(tile.gameObject.tag == "Selected" && unitmap.GetGrid().GetGridObject(x, z) != null && targetables.Contains(unitmap.GetGrid().GetGridObject(x, z)) && unitmap.GetGrid().GetGridObject(x, z) != targetables[0])
@@ -1300,6 +1347,29 @@ public class SinglePlayerManager : MonoBehaviour
                     canvas.GetComponent<GameGUI>().HideAttackInfo();
                 }
             }
+
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                tilemap.Save("TEST_Tiles");
+                unitmap.Save("TEST_Units");
+                Debug.Log("Saved!");
+            }
+
+            if (Input.GetKeyDown(KeyCode.J))
+            {
+                foreach(Unit leunit in playersInMatch[localPlayerID].GetUnits())
+                {
+                    Debug.Log(leunit.ToString() + ": coordinates " + leunit.GetX() + "," + leunit.GetZ());
+                }
+            }
+
+            /*if (Input.GetKeyDown(KeyCode.L) && MouseClickDetector(ref x, ref z, ref tile))
+            {
+                foreach(DijkstraNode shore in AI.moveTowardsGoalIsland(unitmap.GetGrid().GetGridObject(x, z), tilemap.GetGrid().GetGridObject(14, 6), this))
+                {
+                    Instantiate(selectedTile, new Vector3(shore.x * 2, 0.1f, shore.z * 2), Quaternion.identity, map);
+                }
+            }*/
 
             if(menuUp == false)
             {

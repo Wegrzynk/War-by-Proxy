@@ -64,6 +64,7 @@ public class Unit
     private int upgradeCounter;
     private bool isActive;
     private int AIbehaviour;
+    private string AIstate;
 
     public Unit(GameGrid<Unit> grid, int x, int z)
     {
@@ -73,6 +74,7 @@ public class Unit
         this.health = 100;
         this.isActive = true;
         this.AIbehaviour = 0;
+        this.AIstate = "none";
     }
 
     public void SetUnitType(UnitType unitType, int team, int currentAmmo, int currentFuel, Unit[] loadedUnits, int upgradeCounter)
@@ -187,6 +189,16 @@ public class Unit
     public int GetAIbehaviour()
     {
         return AIbehaviour;
+    }
+
+    public void SetAIstate(string state)
+    {
+        AIstate = state;
+    }
+
+    public string GetAIstate()
+    {
+        return AIstate;
     }
 
     public int GetIntFromUnit()
@@ -365,28 +377,80 @@ public class Unit
         public int z;
         public int ammo;
         public int fuel;
-        public Unit[] loadedUnits;
+        public SaveObject[] loadedUnits;
         public int upgradeCounter;
     }
 
     public SaveObject Save()
     {
+        SaveObject returnable = new SaveObject();
+        returnable.unitType = unitType;
+        returnable.health = health;
+        returnable.team = team;
+        returnable.x = x;
+        returnable.z = z;
+        returnable.ammo = ammo;
+        returnable.fuel = fuel;
+        returnable.loadedUnits = new SaveObject[loadCapacity];
+        for(int i = 0; i < loadCapacity; i++)
+        {
+            if(loadedUnits[i] != null)
+            {
+                returnable.loadedUnits[i] = loadedUnits[i].Save();
+            }
+            else
+            {
+                returnable.loadedUnits[i] = SaveNull();
+            }
+        }
+        returnable.upgradeCounter = upgradeCounter;
+        return returnable;
+    }
+
+    public SaveObject SaveNull()
+    {
         return new SaveObject
         {
-            unitType = unitType,
-            health = health,
-            team = team,
-            x = x,
-            z = z,
-            ammo = ammo,
-            fuel = fuel,
-            loadedUnits = loadedUnits,
-            upgradeCounter = upgradeCounter
+            unitType = 0,
+            health = -1,
+            team = -1,
+            x = -1,
+            z = -1,
+            ammo = -1,
+            fuel = -1,
+            loadedUnits = new SaveObject[0],
+            upgradeCounter = -1
         };
     }
 
     public void Load(SaveObject saveObject)
     {
-        unitType = saveObject.unitType;
+        health = saveObject.health;
+        Unit[] localLoadedUnits;
+        int length;
+        if(saveObject.unitType == UnitType.APC || saveObject.unitType == UnitType.Theli || saveObject.unitType == UnitType.Tship)
+        {
+            localLoadedUnits = new Unit[2];
+            length = 2;
+        }
+        else
+        {
+            localLoadedUnits = new Unit[0];
+            length = 0;
+        }
+        Debug.Log("Loading unit " + saveObject.unitType + " with loaded units capacity of " + localLoadedUnits.Length);
+        for(int i = 0; i < length; i++)
+        {
+            if(saveObject.loadedUnits[i].health == -1)
+            {
+                localLoadedUnits[i] = null;
+            }
+            else
+            {
+                localLoadedUnits[i] = new Unit(grid, saveObject.loadedUnits[i].x, saveObject.loadedUnits[i].z);
+                localLoadedUnits[i].Load(saveObject.loadedUnits[i]);
+            }        
+        }
+        SetUnitType(saveObject.unitType, saveObject.team, saveObject.ammo, saveObject.fuel, localLoadedUnits, saveObject.upgradeCounter);
     }
 }

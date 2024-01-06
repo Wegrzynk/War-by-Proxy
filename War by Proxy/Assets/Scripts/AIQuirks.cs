@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class AIQuirks : MonoBehaviour
@@ -30,6 +32,8 @@ public class AIQuirks : MonoBehaviour
         { 0, 0, 100, 0, 0, 17}   // Tank
     };
     public int minFoot = 5;
+    public int dangerThreshold = 90;
+    public Dictionary<Tuple<int,int>,List<Unit>> heatmap;
 
     //---HELPER FUNCTIONS
     private void AIMove(Unit unit, Node bestAttackPosition, SinglePlayerManager mainManager)
@@ -161,6 +165,15 @@ public class AIQuirks : MonoBehaviour
         mainManager.UnitInstantiate(unloaded, unloadPosition.GetX(), unloadPosition.GetZ(), unloaded.GetTeam());
         mainManager.UnitArrayShiftLeft(unloader.GetLoadedUnits(), 1);
         mainManager.playersInMatch[unloaded.GetTeam()-1].AddUnit(unloaded);
+        switch(unloaded.GetUnitType())
+        {
+            case Unit.UnitType.Infantry: unloaded.SetAIbehaviour(6); break;
+            case Unit.UnitType.Mech: unloaded.SetAIbehaviour(6); break;
+            case Unit.UnitType.APC: unloaded.SetAIbehaviour(7); break;
+            case Unit.UnitType.Theli: unloaded.SetAIbehaviour(8); break;
+            case Unit.UnitType.Tship: unloaded.SetAIbehaviour(9); break;
+            default: unloaded.SetAIbehaviour(RNGbehaviour((int)unloaded.GetUnitType())); break;
+        }
     }
 
     private void AISupply(Unit unit, SinglePlayerManager mainManager)
@@ -184,7 +197,7 @@ public class AIQuirks : MonoBehaviour
             case Unit.UnitType.Mech: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(6); break;
             case Unit.UnitType.APC: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(7); break;
             case Unit.UnitType.Theli: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(8); break;
-            case Unit.UnitType.Tship: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(0); break;
+            case Unit.UnitType.Tship: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(9); break;
             default: mainManager.unitmap.GetGrid().GetGridObject(x, z).SetAIbehaviour(RNGbehaviour((int)type)); break;
         }
         mainManager.UnitInstantiate(un, x, z, team+1);
@@ -201,6 +214,105 @@ public class AIQuirks : MonoBehaviour
             if(percentage <= 0) return i+1;
         }
         return 5;
+    }
+
+    private void CreateEnemyHeatMap(SinglePlayerManager mainManager, Unit unit)
+    {
+        heatmap = new Dictionary<Tuple<int, int>, List<Unit>>();
+        for(int x = 0; x < mainManager.unitmap.GetGrid().GetWidth(); x++)
+        {
+            for(int z = 0; z < mainManager.unitmap.GetGrid().GetHeight(); z++)
+            {
+                heatmap.Add(new Tuple<int, int>(x,z), new List<Unit>());
+            }
+        }
+
+        //Debug.Log("Considered unit is: " + unit.ToString() + unit.GetX() + unit.GetZ());
+        foreach(Player enemyPlayer in mainManager.playersInMatch)
+        {
+            if(unit.GetTeam() == enemyPlayer.GetTeam()) continue;
+            foreach(Unit enemyUnit in enemyPlayer.GetUnloadedUnits())
+            {
+                //Debug.Log("Currently checked unit is: " + enemyUnit.ToString() + enemyUnit.GetX() + enemyUnit.GetZ());
+                if(!enemyUnit.isIndirect())
+                {
+                    List<DijkstraNode> unitMovementGraph = mainManager.getUnitMovementGraph(enemyUnit.GetX(), enemyUnit.GetZ());
+                    foreach(DijkstraNode possibleMove in unitMovementGraph)
+                    {
+                        List<Unit> reference = heatmap[new Tuple<int, int>(possibleMove.x, possibleMove.z)];
+                        if(!reference.Contains(enemyUnit)) reference.Add(enemyUnit);
+
+                        //Left
+                        if(possibleMove.x - 1 >= 0)
+                        {
+                            reference = heatmap[new Tuple<int, int>(possibleMove.x - 1, possibleMove.z)];
+                            if(!reference.Contains(enemyUnit)) reference.Add(enemyUnit);
+                        }
+                        //Right
+                        if(possibleMove.x + 1 < mainManager.unitmap.GetGrid().GetWidth())
+                        {
+                            reference = heatmap[new Tuple<int, int>(possibleMove.x + 1, possibleMove.z)];
+                            if(!reference.Contains(enemyUnit)) reference.Add(enemyUnit);
+                        }
+                        //Down
+                        if(possibleMove.z - 1 >= 0)
+                        {
+                            reference = heatmap[new Tuple<int, int>(possibleMove.x, possibleMove.z - 1)];
+                            if(!reference.Contains(enemyUnit)) reference.Add(enemyUnit);
+                        }
+                        //Up
+                        if(possibleMove.z + 1 < mainManager.unitmap.GetGrid().GetHeight())
+                        {
+                            reference = heatmap[new Tuple<int, int>(possibleMove.x, possibleMove.z + 1)];
+                            if(!reference.Contains(enemyUnit)) reference.Add(enemyUnit);
+                        }
+                    }
+                }
+                else
+                {
+                    int minRange = enemyUnit.GetMinRange();
+                    int maxRange = enemyUnit.GetMaxRange();
+                    int counter = 0;
+                    for(int i=maxRange; i>=-maxRange; i--)
+                    {
+                        for(int j=counter; j>=-counter; j--)
+                        {
+                            if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange && enemyUnit.GetX()+i >= 0 && enemyUnit.GetZ()+j >= 0 && 
+                            enemyUnit.GetX()+i < mainManager.unitmap.GetGrid().GetWidth() && enemyUnit.GetZ()+j < mainManager.unitmap.GetGrid().GetHeight())
+                            {
+                                //Debug.Log("Checking coordinates: " + (enemyUnit.GetX()+i) + "," + (enemyUnit.GetZ()+j));
+                                List<Unit> reference = heatmap[new Tuple<int, int>(enemyUnit.GetX()+i, enemyUnit.GetZ()+j)];
+                                if(!reference.Contains(enemyUnit)) reference.Add(enemyUnit);
+                            }
+                        }
+                        if(i>0)
+                        {
+                            counter++;
+                        }
+                        else
+                        {
+                            counter--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private bool evaluateDanger(int x, int z, Unit unit, SinglePlayerManager mainManager)
+    {
+        float danger = 0f;
+        CreateEnemyHeatMap(mainManager, unit);
+        foreach(Unit enemyUnit in heatmap[new Tuple<int, int>(x,z)])
+        {
+            danger += mainManager.damageMatrix[enemyUnit.GetIntFromUnit(),unit.GetIntFromUnit()];
+        }
+        if(unit.GetPureMovementType() != Unit.MovementType.Air)
+        {
+            danger *= mainManager.tilemap.GetGrid().GetGridObject(x,z).GetDefence();
+        }
+        if(danger > dangerThreshold) return false;
+        return true;
     }
 
     private bool attackEnemiesInRangeStationary(Unit unit, SinglePlayerManager mainManager)
@@ -239,7 +351,7 @@ public class AIQuirks : MonoBehaviour
             foreach(Unit enemyChecker in mainManager.unitmap.GetEnemyUnitsInRange(possibleMove.x, possibleMove.z, mainManager, unit))
             {
                 helper = mainManager.getPotentialAttackValue(unit, enemyChecker);
-                if(mainManager.getPotentialCounterattack(unit, enemyChecker) < 50 && helper > maxProfit)
+                if(mainManager.getPotentialCounterattack(unit, enemyChecker) < 50 && evaluateDanger(possibleMove.x, possibleMove.z, unit, mainManager) && helper > maxProfit)
                 {
                     maxProfit = helper;
                     bestAttackPosition = possibleMove;
@@ -695,6 +807,7 @@ public class AIQuirks : MonoBehaviour
 
     private bool moveTowardsNonAlliedBuilding(Unit unit, SinglePlayerManager mainManager)
     {
+        //Debug.Log("Trying to move near a building on map with unit " + unit.ToString() + unit.GetX() + unit.GetZ());
         List<DijkstraNode> unitMovementGraph = mainManager.getMapReachabilityGraph(unit.GetX(), unit.GetZ());
         List<PathNode> path = new List<PathNode>();
         PathNode selectedTile = null;
@@ -721,6 +834,128 @@ public class AIQuirks : MonoBehaviour
             returnValue = true;
         }
         return returnValue;
+    }
+
+    private bool moveTowardsGoalIsland(Unit unit, TileType tile, SinglePlayerManager mainManager, bool hasLoadedUnit)
+    {
+        List<DijkstraNode> islandTiles;
+        if(hasLoadedUnit)
+        {
+            islandTiles = mainManager.getMapReachabilityFromGoalGraph(tile.GetX(), tile.GetZ(), unit.GetLoadedUnits()[0]);
+        }
+        else
+        {
+            islandTiles = mainManager.getMapReachabilityFromGoalGraph(tile.GetX(), tile.GetZ(), mainManager.unitmap.GetGrid().GetGridObject(tile.GetX(), tile.GetZ()));
+        }
+        List<DijkstraNode> landerMovementGraph = mainManager.getMapReachabilityGraph(unit.GetX(), unit.GetZ());
+        List<DijkstraNode> validShores = new List<DijkstraNode>();
+        List<PathNode> path = new List<PathNode>();
+        PathNode selectedTile = null;
+        bool returnValue = false;
+
+        foreach(DijkstraNode possibleMove in landerMovementGraph)
+        {
+            //Left
+            if(possibleMove.x - 1 >= 0 && islandTiles.Contains(mainManager.pathmaking.GetNode(possibleMove.x - 1, possibleMove.z)))
+            {
+                if(!validShores.Contains(possibleMove)) validShores.Add(possibleMove);
+            }
+            //Right
+            if(possibleMove.x + 1 < mainManager.unitmap.GetGrid().GetWidth() && islandTiles.Contains(mainManager.pathmaking.GetNode(possibleMove.x + 1, possibleMove.z)))
+            {
+                if(!validShores.Contains(possibleMove)) validShores.Add(possibleMove);
+            }
+            //Down
+            if(possibleMove.z - 1 >= 0 && islandTiles.Contains(mainManager.pathmaking.GetNode(possibleMove.x, possibleMove.z - 1)))
+            {
+                if(!validShores.Contains(possibleMove)) validShores.Add(possibleMove);
+            }
+            //Up
+            if(possibleMove.z + 1 < mainManager.unitmap.GetGrid().GetHeight() && islandTiles.Contains(mainManager.pathmaking.GetNode(possibleMove.x, possibleMove.z + 1)))
+            {
+                if(!validShores.Contains(possibleMove)) validShores.Add(possibleMove);
+            }
+        }
+
+        foreach(DijkstraNode possibleMove in landerMovementGraph)
+        {
+            if(validShores.Contains(possibleMove))
+            {
+                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                foreach(PathNode node in path)
+                {
+                    if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
+                    {
+                        selectedTile = node;
+                    }
+                }
+                if(selectedTile != null) break;
+            }
+        }
+        if(selectedTile != null)
+        {
+            AIMove(unit, selectedTile, mainManager);
+            if(hasLoadedUnit && path.Last() == selectedTile)
+            {
+                //Left
+                if(selectedTile.x - 1 >= 0 && islandTiles.Contains(mainManager.pathmaking.GetNode(selectedTile.x - 1, selectedTile.z)))
+                {
+                    AIUnload(unit, mainManager.tilemap.GetGrid().GetGridObject(selectedTile.x - 1, selectedTile.z), mainManager);
+                }
+                //Right
+                else if(selectedTile.x + 1 < mainManager.unitmap.GetGrid().GetWidth() && islandTiles.Contains(mainManager.pathmaking.GetNode(selectedTile.x + 1, selectedTile.z)))
+                {
+                    AIUnload(unit, mainManager.tilemap.GetGrid().GetGridObject(selectedTile.x + 1, selectedTile.z), mainManager);
+                }
+                //Down
+                else if(selectedTile.z - 1 >= 0 && islandTiles.Contains(mainManager.pathmaking.GetNode(selectedTile.x, selectedTile.z - 1)))
+                {
+                    AIUnload(unit, mainManager.tilemap.GetGrid().GetGridObject(selectedTile.x, selectedTile.z - 1), mainManager);
+                }
+                //Up
+                else if(selectedTile.z + 1 < mainManager.unitmap.GetGrid().GetHeight() && islandTiles.Contains(mainManager.pathmaking.GetNode(selectedTile.x, selectedTile.z + 1)))
+                {
+                    AIUnload(unit, mainManager.tilemap.GetGrid().GetGridObject(selectedTile.x, selectedTile.z + 1), mainManager);
+                }
+            }
+            returnValue = true;
+        }
+        return returnValue;
+    }
+
+    private TileType ScanForGoal(Unit unit, SinglePlayerManager mainManager)
+    {
+        TileType target = null;
+        for(int x = 0; x < mainManager.tilemap.GetGrid().GetWidth(); x++)
+        {
+            for(int z = 0; z < mainManager.tilemap.GetGrid().GetHeight(); z++)
+            {
+                if(isNonAlliedBuilding(x, z, unit, mainManager))
+                {
+                    if(target == null || (target != null && Mathf.Abs(unit.GetX() - x) + Mathf.Abs(unit.GetZ() - z) < Mathf.Abs(unit.GetX() - target.GetX()) + Mathf.Abs(unit.GetZ() - target.GetZ())))
+                    {
+                        target = mainManager.tilemap.GetGrid().GetGridObject(x, z);
+                    }
+                }
+            }
+        }
+        return target;
+    }
+
+    private TileType FindStrandedUnit(Unit unit, SinglePlayerManager mainManager)
+    {
+        Player owner = mainManager.playersInMatch[unit.GetTeam()-1];
+        TileType target = null;
+        foreach(Unit friendly in owner.GetUnloadedUnits())
+        {
+            //Debug.Log("Found unit: " + friendly.ToString() + friendly.GetX() + friendly.GetZ());
+            if(friendly.GetAIstate() == "ISLAND_STRANDED")
+            {
+                target = mainManager.tilemap.GetGrid().GetGridObject(friendly.GetX(), friendly.GetZ());
+            }
+        }
+
+        return target;
     }
 
     private bool moveToTransportInRange(Unit unit, SinglePlayerManager mainManager)
@@ -753,6 +988,45 @@ public class AIQuirks : MonoBehaviour
         if(transport != null)
         {
             AILoad(unit, transport, mainManager);
+            returnValue = true;
+        }
+        return returnValue;
+    }
+
+    private bool moveTowardsTransport(Unit unit, SinglePlayerManager mainManager)
+    {
+        List<DijkstraNode> unitMovementGraph = mainManager.getMapReachabilityGraph(unit.GetX(), unit.GetZ());
+        List<PathNode> path = new List<PathNode>();
+        PathNode selectedTile = null;
+        bool returnValue = false;
+        bool loopBreak = false;
+
+        foreach(DijkstraNode possibleMove in unitMovementGraph)
+        {
+            foreach(Unit friendlyChecker in mainManager.unitmap.GetFriendlyUnitsInRange(possibleMove.x, possibleMove.z, unit))
+            {
+                if(friendlyChecker.GetLoadCapacity() > 0 && friendlyChecker.GetLoadedUnits()[friendlyChecker.GetLoadCapacity() - 1] == null)
+                {
+                    path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                    foreach(PathNode node in path)
+                    {
+                        if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
+                        {
+                            selectedTile = node;
+                        }
+                    }
+                    if(selectedTile != null)
+                    {
+                        loopBreak = true;
+                        break;
+                    }
+                }
+            }
+            if(loopBreak) break;
+        }
+        if(selectedTile != null)
+        {
+            AIMove(unit, selectedTile, mainManager);
             returnValue = true;
         }
         return returnValue;
@@ -1006,7 +1280,8 @@ public class AIQuirks : MonoBehaviour
 
         //Condition #3 - if non-allied non-secured buildings not found within range, will move to the nearest one outside of range using A*
         //It would be super sick if i could implement zoning function
-        moveTowardsNonAlliedBuilding(unit, mainManager);
+        checker = moveTowardsNonAlliedBuilding(unit, mainManager);
+        if(checker) return;
 
         //Condition #4 - if non-allied non-secured buildings not found on map, defaults to aggressive behaviour as a cleanup duty
         AggressiveBehaviour(unit);
@@ -1091,7 +1366,11 @@ public class AIQuirks : MonoBehaviour
         if(checker) return;
 
         //Condition #5 - if no previous condition was true, default to moving towards the nearest capturable building
-        moveTowardsNonAlliedBuilding(unit, mainManager);
+        checker = moveTowardsNonAlliedBuilding(unit, mainManager);
+        if(checker) return;
+
+        unit.SetAIstate("ISLAND_STRANDED");
+        moveTowardsTransport(unit, mainManager);
     }
 
     public void TransportLandBehaviour(Unit unit)
@@ -1139,64 +1418,88 @@ public class AIQuirks : MonoBehaviour
         //Yep, literally nothing
     }
 
+    public void TransportSeaBehaviour(Unit unit)
+    {
+        SinglePlayerManager mainManager = mainScriptHolder.GetComponent<SinglePlayerManager>();
+        bool checker = false;
+
+        //Condition #1 - if transporting a unit (any land unit), will move towards an island that contains non-allied buildings
+        if(unit.GetLoadedUnits()[0] != null)
+        {
+            checker = moveTowardsGoalIsland(unit, ScanForGoal(unit, mainManager), mainManager, true);
+            if(checker) return;
+        }
+
+        //Condition #2 - if not transporting any unit, will move towards an island that contains stranded units
+        TileType stranded = FindStrandedUnit(unit, mainManager);
+        if(stranded != null)
+        {
+            checker = moveTowardsGoalIsland(unit, stranded, mainManager, false);
+            if(checker) return;
+        }
+
+        //Condition #3 - defaults to stationary if not transporting anything and no land unit is stranded
+        //Yep, literally nothing
+    }
+
     //---RECRUIT FUNCTION
     public void AIRecruitUnit(int x, int z, int type, SinglePlayerManager mainManager)
     {
-        Debug.Log("Attempting to recruit from building on coordinates: " + x + "," + z);
+        //Debug.Log("Attempting to recruit from building on coordinates: " + x + "," + z);
         List<Unit> recruits = new List<Unit>();
         Unit currentlySelected = null;
         int team = ((Building)mainManager.tilemap.GetGrid().GetGridObject(x, z)).GetTeam() - 1;
         switch(type)
         {
             case 1:
-                Debug.Log("Selected building is a Military Base");
+                //Debug.Log("Selected building is a Military Base");
                 recruits = mainManager.militaryBaseRecruits;
                 break;
             case 2:
-                Debug.Log("Selected building is an Airport");
+                //Debug.Log("Selected building is an Airport");
                 recruits = mainManager.airportRecruits;
                 break;
             case 3:
-                Debug.Log("Selected building is a Port");
+                //Debug.Log("Selected building is a Port");
                 recruits = mainManager.portRecruits;
                 break;
             default:
-                Debug.Log("Something went wrong when selecting building type");
+                //Debug.Log("Something went wrong when selecting building type");
                 recruits = mainManager.militaryBaseRecruits;
                 break;
         }
 
-        Debug.Log("Buying infantry if infantry count " + mainManager.playersInMatch[team].unitTypeCount[9] + " is less than " + minFoot);
+        //Debug.Log("Buying infantry if infantry count " + mainManager.playersInMatch[team].unitTypeCount[9] + " is less than " + minFoot);
         if(type == 1 && 1000 <= mainManager.playersInMatch[team].GetFunds() && mainManager.playersInMatch[team].unitTypeCount[9] < minFoot)
         {
             AIRecruit(Unit.UnitType.Infantry, x, z, team, mainManager);
-            Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
+            //Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
             return;
         }
 
         foreach(Unit unit in recruits)
         {
-            Debug.Log("Currently checking unit: " + unit.ToString() + ", Current funds: " + mainManager.playersInMatch[team].GetFunds() + ", Current army count: " + mainManager.playersInMatch[team].GetUnits().Count);
+            //Debug.Log("Currently checking unit: " + unit.ToString() + ", Current funds: " + mainManager.playersInMatch[team].GetFunds() + ", Current army count: " + mainManager.playersInMatch[team].GetUnits().Count);
             //Debug.Log("Checking if unit cost = " + unit.GetCost() + " is not greater than AI funds = " + mainManager.playersInMatch[team].GetFunds());
             if(unit.GetCost() <= mainManager.playersInMatch[team].GetFunds())
             {
-                Debug.Log("Count of units of this type in army: " + mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] + ". Expected: " + (float)mainManager.playersInMatch[team].GetUnits().Count * ((float)AIPreset[unit.GetIntFromUnit(),5] / 100));
+                //Debug.Log("Count of units of this type in army: " + mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] + ". Expected: " + (float)mainManager.playersInMatch[team].GetUnits().Count * ((float)AIPreset[unit.GetIntFromUnit(),5] / 100));
                 if(mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()] == 0 && AIPreset[unit.GetIntFromUnit(),5] != 0)
                 {
-                    Debug.Log("Both current unit type in army is 0 and this unit's rate is not 0");
+                    //Debug.Log("Both current unit type in army is 0 and this unit's rate is not 0");
                     currentlySelected = unit;
                 }
                 else if((float)mainManager.playersInMatch[team].GetUnits().Count * ((float)AIPreset[unit.GetIntFromUnit(),5] / 100) > mainManager.playersInMatch[team].unitTypeCount[unit.GetIntFromUnit()])
                 {
-                    Debug.Log("More units of this type required");
+                    //Debug.Log("More units of this type required");
                     if(currentlySelected != null && AIPreset[unit.GetIntFromUnit(),5] >= AIPreset[currentlySelected.GetIntFromUnit(),5])
                     {
-                        Debug.Log("Currently selected's rate: " + AIPreset[currentlySelected.GetIntFromUnit(),5] + ", Checked unit's rate: " + AIPreset[unit.GetIntFromUnit(),5]);
+                        //Debug.Log("Currently selected's rate: " + AIPreset[currentlySelected.GetIntFromUnit(),5] + ", Checked unit's rate: " + AIPreset[unit.GetIntFromUnit(),5]);
                         currentlySelected = unit;
                     }
                     else if(currentlySelected == null)
                     {
-                        Debug.Log("Currently no selected unit. Assigning the checked one.");
+                        //Debug.Log("Currently no selected unit. Assigning the checked one.");
                         currentlySelected = unit;
                     }
                 }
@@ -1210,7 +1513,7 @@ public class AIQuirks : MonoBehaviour
         if(currentlySelected != null)
         {
             AIRecruit(currentlySelected.GetUnitType(), x, z, team, mainManager);
-            Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
+            //Debug.Log("AI current funds: " + mainManager.playersInMatch[team].GetFunds());
         }
     }
 }

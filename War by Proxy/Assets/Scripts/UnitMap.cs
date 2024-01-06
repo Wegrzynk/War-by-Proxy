@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Unitmap
@@ -268,6 +269,18 @@ public class Unitmap
                 if(Unit != null)
                 {
                     UnitSaveObjectList.Add(Unit.Save());
+                    /*Debug.Log(Unit.ToString());
+                    foreach(Unit leunit in UnitSaveObjectList.Last().loadedUnits)
+                    {
+                        if(leunit == null)
+                        {
+                            Debug.Log("unit is null");
+                        }
+                        else
+                        {
+                            Debug.Log(leunit.ToString());
+                        }
+                    }*/
                 }
             }
         }
@@ -288,12 +301,44 @@ public class Unitmap
             foreach (Unit.SaveObject UnitSaveObject in saveObject.UnitSaveObjectArray)
             {
                 grid.SetGridObject(UnitSaveObject.x, UnitSaveObject.z, new Unit(grid, UnitSaveObject.x, UnitSaveObject.z));
-                grid.GetGridObject(UnitSaveObject.x, UnitSaveObject.z).SetUnitType(UnitSaveObject.unitType, UnitSaveObject.team, UnitSaveObject.ammo, UnitSaveObject.fuel, UnitSaveObject.loadedUnits, UnitSaveObject.upgradeCounter);
+                /*Unit[] loadedunits;
+                int length;
+                if(UnitSaveObject.unitType == Unit.UnitType.APC || UnitSaveObject.unitType == Unit.UnitType.Theli || UnitSaveObject.unitType == Unit.UnitType.Tship)
+                {
+                    loadedunits = new Unit[2];
+                    length = 2;
+                }
+                else
+                {
+                    loadedunits = new Unit[0];
+                    length = 0;
+                }
+                for(int i = 0; i < length; i++)
+                {
+                    if(UnitSaveObject.loadedUnits[i].health == -1)
+                    {
+                        loadedunits = null;
+                    }
+                    else
+                    {
+                        loadedunits[i] = new Unit(grid, UnitSaveObject.loadedUnits[i].x, UnitSaveObject.loadedUnits[i].z);
+                        loadedunits[i].SetUnitType(UnitSaveObject.loadedUnits[i].unitType, UnitSaveObject.loadedUnits[i].team, UnitSaveObject.loadedUnits[i].ammo, UnitSaveObject.loadedUnits[i].fuel, loadedunits, UnitSaveObject.loadedUnits[i].upgradeCounter);
+                    }
+                }
+                grid.GetGridObject(UnitSaveObject.x, UnitSaveObject.z).SetUnitType(UnitSaveObject.unitType, UnitSaveObject.team, UnitSaveObject.ammo, UnitSaveObject.fuel, loadedunits, UnitSaveObject.upgradeCounter);*/
+                grid.GetGridObject(UnitSaveObject.x, UnitSaveObject.z).Load(UnitSaveObject);
                 grid.TriggerGenericGridChanged(UnitSaveObject.x, UnitSaveObject.z);
             }
         }
         OnLoaded?.Invoke(this, EventArgs.Empty);
     }
+
+    /*public Unit LoadIndividual(Unit.SaveObject UnitSaveObject)
+    {
+        Unit returnable = new Unit(grid, UnitSaveObject.x, UnitSaveObject.z);
+
+        return returnable;
+    }*/
 
     public bool SaveExists(string filename)
     {

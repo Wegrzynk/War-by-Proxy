@@ -49,9 +49,10 @@ public class Player
                             case Unit.UnitType.Mech: unitHelp.SetAIbehaviour(6); break;
                             case Unit.UnitType.APC: unitHelp.SetAIbehaviour(7); break;
                             case Unit.UnitType.Theli: unitHelp.SetAIbehaviour(8); break;
-                            case Unit.UnitType.Tship: unitHelp.SetAIbehaviour(0); break;
+                            case Unit.UnitType.Tship: unitHelp.SetAIbehaviour(9); break;
                             default: unitHelp.SetAIbehaviour(RNGreference.RNGbehaviour((int)unitHelp.GetUnitType())); break;
                         }
+                        unitHelp.SetAIstate("none");
                     }
                     if(unitHelp.GetLoadedUnits().Length > 0)
                     {
