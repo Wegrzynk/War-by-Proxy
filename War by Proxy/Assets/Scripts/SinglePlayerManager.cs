@@ -43,6 +43,7 @@ public class SinglePlayerManager : MonoBehaviour
     public int turnCounter = 0;
     private int turnsPassed = 1;
     private int creatorSelector = 0;
+    private int limiter = 10;
     private string unitSelected = "false";
     private bool menuUp = false;
     public PathMaking pathmaking;
@@ -58,6 +59,11 @@ public class SinglePlayerManager : MonoBehaviour
 
     public int debugMode = 2;
     private int localPlayerID;
+
+    IEnumerator timer()
+    {
+        yield return new WaitForSeconds(1.0f);
+    }
 
     public void PrintListUnits(List<Unit> array, int x, int z, int team)
     {
@@ -220,8 +226,8 @@ public class SinglePlayerManager : MonoBehaviour
     {
         if (debugMode == 3 || debugMode == 4)
         {
-            tilemap.Load("TEST2_Tiles");
-            unitmap.Load("TEST2_Units");
+            tilemap.Load("TEST_Tiles");
+            unitmap.Load("TEST_Units");
             for (int z = 0; z < mapSizeZ; z++)
             {
                 for (int x = 0; x < mapSizeX; x++)
@@ -491,7 +497,7 @@ public class SinglePlayerManager : MonoBehaviour
         }
         menuUp = false;
         canvas.GetComponent<GameGUI>().quickmenu.SetActive(false);
-        SynchronizeTurn();
+        StartCoroutine(SynchronizeTurn());
     }
 
     public void GameLost(int playerID)
@@ -601,7 +607,7 @@ public class SinglePlayerManager : MonoBehaviour
         unitmap.GetGrid().GetGridObject(x, z).Upgrade();
     }
 
-    private void SynchronizeTurn()
+    private IEnumerator SynchronizeTurn()
     {
         if(turnCounter + 1 >= playersInMatch.Count)
         {
@@ -612,8 +618,8 @@ public class SinglePlayerManager : MonoBehaviour
             turnCounter++;
         }
         localTurnSystem.TurnInit(playersInMatch[turnCounter]);
-        if(turnCounter == 1)
-        {
+        //if(turnCounter == 1)
+        //{
             List<Unit> unitsToMove = AI.sortUnitMovementList(new List<Unit>(playersInMatch[turnCounter].GetUnloadedUnits()), this);
             //AI logic
             //Debug.Log("List of AI unloaded units this turn:");
@@ -667,8 +673,13 @@ public class SinglePlayerManager : MonoBehaviour
             }
             //Debug.Log(list);
 
-            SynchronizeTurn();
-        }
+
+            //StartCoroutine(timer());
+            Debug.Log("Done.");
+            yield return new WaitForSeconds(1.0f);
+            //limiter--;
+            /*if(limiter > 0)*/ StartCoroutine(SynchronizeTurn());
+        //}
     }
 
     private void SynchronizeGrantWin(int team)
