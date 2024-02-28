@@ -30,9 +30,41 @@ public class Unitmap
         grid.GetGridObject(x, z).SetUnitType(UnitType, team, ammo, fuel, loadedUnits, upgradeCounter);
     }
 
-    public void MoveUnit(int startX, int startZ, int endX, int endZ)
+    public bool MoveUnit(int startX, int startZ, int endX, int endZ, SinglePlayerManager mainManager, out int x, out int z)
     {
         if(startX == endX && startZ == endZ)
+        {
+            x = endX;
+            z = endZ;
+            return true;
+        }
+        int finalX = endX;
+        int finalZ = endZ;
+        List<PathNode> path = mainManager.pathfinding.FindPath(startX, startZ, endX, endZ, grid.GetGridObject(startX, startZ), mainManager.tilemap, mainManager.unitmap, true, mainManager.fogsystem);
+        for(int i = 1; i < path.Count; i++)
+        {
+            if(grid.GetGridObject(path[i].x, path[i].z) != null && grid.GetGridObject(path[i].x, path[i].z).GetTeam() != grid.GetGridObject(startX, startZ).GetTeam())
+            {
+                finalX = path[i - 1].x;
+                finalZ = path[i - 1].z;
+                break;
+            }
+        }
+        grid.SetGridObject(finalX, finalZ, grid.GetGridObject(startX, startZ));
+        grid.GetGridObject(finalX, finalZ).setXZ(finalX, finalZ);
+        grid.TriggerGenericGridChanged(finalX, finalZ);
+        grid.SetGridObject(startX, startZ, null);
+        grid.TriggerGenericGridChanged(startX, startZ);
+        grid.TriggerGenericGridChanged(finalX, finalZ);
+        x = finalX;
+        z = finalZ;
+        if (finalX == endX && finalZ == endZ) return true;
+        return false;
+    }
+
+    public void MoveUnit(int startX, int startZ, int endX, int endZ)
+    {
+        if (startX == endX && startZ == endZ)
         {
             return;
         }

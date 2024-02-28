@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using ExitGames.Client.Photon.StructWrapping;
@@ -18,6 +19,7 @@ public class SinglePlayerManager : MonoBehaviour
     public TurnSystem localTurnSystem = new TurnSystem();
     public GameObject canvas;
     public GameObject selectedTile;
+    public GameObject fogTile;
     public GameObject mapButtonPrefab;
     public GameObject visibleGridPrefab;
     public GameObject turnIndicator;
@@ -48,6 +50,7 @@ public class SinglePlayerManager : MonoBehaviour
     private bool menuUp = false;
     public PathMaking pathmaking;
     public PathFinding pathfinding;
+    public FogSystem fogsystem;
     public Tilemap tilemap;
     public Unitmap unitmap;
     List<DijkstraNode> graph = new List<DijkstraNode>();
@@ -58,6 +61,7 @@ public class SinglePlayerManager : MonoBehaviour
     public AIQuirks AI;
 
     public int debugMode = 2;
+    public bool fogOfWar = true;
     private int localPlayerID;
 
     IEnumerator timer()
@@ -215,9 +219,11 @@ public class SinglePlayerManager : MonoBehaviour
             tilemap = new Tilemap(mapSizeX, mapSizeZ, 2f, Vector3.zero);
             pathmaking = new PathMaking(mapSizeX, mapSizeZ);
             pathfinding = new PathFinding(mapSizeX, mapSizeZ);
+            fogsystem = new FogSystem(mapSizeX, mapSizeZ);
             GenerateMapVisual();
         }
         InitPlayers();
+        GenerateLocalFog(localPlayerID);
         canvas.GetComponent<GameGUI>().quickmenu.transform.Find("QuickMenuOverView").GetComponent<Button>().onClick.AddListener(() => canvas.GetComponent<GameGUI>().SPShowMatchOverview(teamColours));
         canvas.GetComponent<GameGUI>().yieldconfirmation.transform.Find("ConfirmButton").GetComponent<Button>().onClick.AddListener(() => GameLost(localPlayerID));
     }
@@ -255,64 +261,146 @@ public class SinglePlayerManager : MonoBehaviour
         }
     }
 
+    private void GenerateLocalFog(int player)
+    {
+        fogsystem.ObscureFully();
+        foreach(Unit unit in playersInMatch[player].GetUnloadedUnits())
+        {
+            fogsystem.RevealLocally(unit);
+        }
+        foreach(GameObject fog in Resources.FindObjectsOfTypeAll<GameObject>().Where(obj => obj.name == "fog"))
+        {
+            Destroy(fog);
+        }
+        for (int z = 0; z < mapSizeZ; z++)
+        {
+            for (int x = 0; x < mapSizeX; x++)
+            {
+                TileType hiddentile = tilemap.GetGrid().GetGridObject(x, z);
+                Unit nonFriendlyUnit = unitmap.GetGrid().GetGridObject(x, z);
+                if (fogsystem.GetGrid().GetGridObject(x, z).isFogged)
+                {
+                    GameObject fog = Instantiate(fogTile, new Vector3(x * 2, 0, z * 2), Quaternion.identity, map);
+                    fog.name = "fog";
+                    if(hiddentile.GetType().IsSubclassOf(typeof(Building)) && playersInMatch[localPlayerID].GetTeam() != ((Building)hiddentile).GetTeam())
+                    {
+                        ((Building)hiddentile).Visualize(teamColours[0], GameObject.Find(hiddentile.ToString() + x + z));
+                    }
+                    if(nonFriendlyUnit != null && nonFriendlyUnit.GetTeam() != playersInMatch[localPlayerID].GetTeam())
+                    {
+                        RPCDestroy(nonFriendlyUnit.ToString() + x + z);
+                    }
+                }
+                else
+                {
+                    if (hiddentile.GetType().IsSubclassOf(typeof(Building)))
+                    {
+                        ((Building)hiddentile).Visualize(teamColours[((Building)hiddentile).GetTeam()], GameObject.Find(hiddentile.ToString() + x + z));
+                    }
+                    if (nonFriendlyUnit != null && GameObject.Find(nonFriendlyUnit.ToString() + x + z) == null)
+                    {
+                        UnitInstantiate(nonFriendlyUnit, x, z, unitmap.GetGrid().GetGridObject(x, z).GetTeam());
+                    }
+                }
+            }
+        }
+    }
+
+    private void TrapUnit(Unit trapped, string action)
+    {
+        if(action == "move")
+        {
+
+        }
+    }
+
     public void ActionMove(int x, int z)
     {
-        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
-        if(movableUnit)
+        int achievablex, achievablez;
+        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).ToString() + graph[0].x + graph[0].z);
+        unitmap.MoveUnit(graph[0].x, graph[0].z, x, z, this, out achievablex, out achievablez);
+        if (movableUnit)
         {
-            movableUnit.transform.position = new Vector3(x * 2, 0.7f, z * 2);
-            movableUnit.name = unitmap.GetGrid().GetGridObject(x, z).ToString() + x + z;
-            unitmap.GetGrid().GetGridObject(x, z).SetIsActive(false);
-            unitmap.GetGrid().GetGridObject(x, z).VisualDeactivation();
-            unitmap.GetGrid().GetGridObject(x, z).FuelCost(Mathf.Abs(graph[0].x - x) + Mathf.Abs(graph[0].z - z));
-            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(x, z));
+            movableUnit.transform.position = new Vector3(achievablex * 2, 0.7f, achievablez * 2);
+            movableUnit.name = unitmap.GetGrid().GetGridObject(achievablex, achievablez).ToString() + achievablex + achievablez;
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).SetIsActive(false);
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).VisualDeactivation();
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).FuelCost(Mathf.Abs(graph[0].x - achievablex) + Mathf.Abs(graph[0].z - achievablez));
+            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(achievablex, achievablez));
+            movedx = achievablex;
+            movedz = achievablez;
         }
         unitSelected = "false";
         foreach(GameObject selected in selectedTiles)
         {
             Destroy(selected);
         }
+        GenerateLocalFog(localPlayerID);
         canvas.GetComponent<GameGUI>().HideActionInfo();
     }
 
     public void ActionAttack(int x, int z)
     {
-        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
-        if(movableUnit)
+        int achievablex, achievablez;
+        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).ToString() + graph[0].x + graph[0].z);
+        unitmap.MoveUnit(graph[0].x, graph[0].z, x, z, this, out achievablex, out achievablez);
+        if (movableUnit)
         {
-            movableUnit.transform.position = new Vector3(x * 2, 0.7f, z * 2);
-            movableUnit.name = unitmap.GetGrid().GetGridObject(x, z).ToString() + x + z;
-            unitmap.GetGrid().GetGridObject(x, z).FuelCost(Mathf.Abs(graph[0].x - x) + Mathf.Abs(graph[0].z - z));
+            movableUnit.transform.position = new Vector3(achievablex * 2, 0.7f, achievablez * 2);
+            movableUnit.name = unitmap.GetGrid().GetGridObject(achievablex, achievablez).ToString() + achievablex + achievablez;
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).FuelCost(Mathf.Abs(graph[0].x - achievablex) + Mathf.Abs(graph[0].z - achievablez));
+            movedx = achievablex;
+            movedz = achievablez;
         }
         foreach(GameObject selected in selectedTiles)
         {
             Destroy(selected);
+        }
+        if(achievablex != x || achievablez != z)
+        {
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).SetIsActive(false);
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).VisualDeactivation();
+            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(achievablex, achievablez));
+            unitSelected = "false";
+            GenerateLocalFog(localPlayerID);
+            canvas.GetComponent<GameGUI>().HideActionInfo();
+            return;
         }
         for (int i = 1; i < targetables.Count; i++)
         {
             selectedTiles.Add(Instantiate(selectedTile, new Vector3(targetables[i].GetX() * 2, 0.1f, targetables[i].GetZ() * 2), Quaternion.identity, map));
         }
         unitSelected = "fire";
-        movementx = x;
-        movementz = z;
+        movementx = achievablex;
+        movementz = achievablez;
         canvas.GetComponent<GameGUI>().HideActionInfo();
     }
 
     public void ActionCapture(int x, int z)
     {
-        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
-        if(movableUnit)
+        int achievablex, achievablez;
+        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).ToString() + graph[0].x + graph[0].z);
+        unitmap.MoveUnit(graph[0].x, graph[0].z, x, z, this, out achievablex, out achievablez);
+        if (movableUnit)
         {
-            movableUnit.transform.position = new Vector3(x * 2, 0.7f, z * 2);
-            movableUnit.name = unitmap.GetGrid().GetGridObject(x, z).ToString() + x + z;
-            unitmap.GetGrid().GetGridObject(x, z).SetIsActive(false);
-            unitmap.GetGrid().GetGridObject(x, z).VisualDeactivation();
-            unitmap.GetGrid().GetGridObject(x, z).FuelCost(Mathf.Abs(graph[0].x - x) + Mathf.Abs(graph[0].z - z));
-            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(x, z));
+            movableUnit.transform.position = new Vector3(achievablex * 2, 0.7f, achievablez * 2);
+            movableUnit.name = unitmap.GetGrid().GetGridObject(achievablex, achievablez).ToString() + achievablex + achievablez;
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).SetIsActive(false);
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).VisualDeactivation();
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).FuelCost(Mathf.Abs(graph[0].x - achievablex) + Mathf.Abs(graph[0].z - achievablez));
+            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(achievablex, achievablez));
         }
         foreach(GameObject selected in selectedTiles)
         {
             Destroy(selected);
+        }
+        GenerateLocalFog(localPlayerID);
+        if (achievablex != x || achievablez != z)
+        {
+            unitSelected = "false";
+            GenerateLocalFog(localPlayerID);
+            canvas.GetComponent<GameGUI>().HideActionInfo();
+            return;
         }
 
         Transform localtile = GameObject.Find(tilemap.GetGrid().GetGridObject(x, z).ToString() + x + z).transform;
@@ -352,19 +440,28 @@ public class SinglePlayerManager : MonoBehaviour
 
     public void ActionSupply(int x, int z)
     {
-        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
-        if(movableUnit)
+        int achievablex, achievablez;
+        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).ToString() + graph[0].x + graph[0].z);
+        unitmap.MoveUnit(graph[0].x, graph[0].z, x, z, this, out achievablex, out achievablez);
+        if (movableUnit)
         {
-            movableUnit.transform.position = new Vector3(x * 2, 0.7f, z * 2);
-            movableUnit.name = unitmap.GetGrid().GetGridObject(x, z).ToString() + x + z;
-            unitmap.GetGrid().GetGridObject(x, z).SetIsActive(false);
-            unitmap.GetGrid().GetGridObject(x, z).VisualDeactivation();
-            unitmap.GetGrid().GetGridObject(x, z).FuelCost(Mathf.Abs(graph[0].x - x) + Mathf.Abs(graph[0].z - z));
-            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(x, z));
+            movableUnit.transform.position = new Vector3(achievablex * 2, 0.7f, achievablez * 2);
+            movableUnit.name = unitmap.GetGrid().GetGridObject(achievablex, achievablez).ToString() + achievablex + achievablez;
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).SetIsActive(false);
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).VisualDeactivation();
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).FuelCost(Mathf.Abs(graph[0].x - achievablex) + Mathf.Abs(graph[0].z - achievablez));
+            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(achievablex, achievablez));
         }
         foreach(GameObject selected in selectedTiles)
         {
             Destroy(selected);
+        }
+        if (achievablex != x || achievablez != z)
+        {
+            unitSelected = "false";
+            GenerateLocalFog(localPlayerID);
+            canvas.GetComponent<GameGUI>().HideActionInfo();
+            return;
         }
         Unit supplier = unitmap.GetGrid().GetGridObject(supplyTargetables[0].GetX(), supplyTargetables[0].GetZ());
         supplier.SetIsActive(false);
@@ -372,23 +469,36 @@ public class SinglePlayerManager : MonoBehaviour
         localTurnSystem.MoveUnitAfterOrder(supplier);
         SynchronizeSupply(x, z);
         unitSelected = "false";
+        GenerateLocalFog(localPlayerID);
         canvas.GetComponent<GameGUI>().HideActionInfo();
     }
 
     public void ActionLoad(int x, int z)
     {
-        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
-        if(movableUnit)
+        int achievablex, achievablez;
+        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).ToString() + graph[0].x + graph[0].z);
+        unitmap.MoveUnit(graph[0].x, graph[0].z, x, z, this, out achievablex, out achievablez);
+        if (movableUnit)
         {
-            movableUnit.transform.position = new Vector3(x * 2, 0.7f, z * 2);
-            movableUnit.name = unitmap.GetGrid().GetGridObject(x, z).ToString() + x + z;
-            unitmap.GetGrid().GetGridObject(x, z).FuelCost(Mathf.Abs(graph[0].x - x) + Mathf.Abs(graph[0].z - z));
+            movableUnit.transform.position = new Vector3(achievablex * 2, 0.7f, achievablez * 2);
+            movableUnit.name = unitmap.GetGrid().GetGridObject(achievablex, achievablez).ToString() + achievablex + achievablez;
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).FuelCost(Mathf.Abs(graph[0].x - achievablex) + Mathf.Abs(graph[0].z - achievablez));
         }
         foreach(GameObject selected in selectedTiles)
         {
             Destroy(selected);
         }
-        foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)))
+        if (achievablex != x || achievablez != z)
+        {
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).SetIsActive(false);
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).VisualDeactivation();
+            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(achievablex, achievablez));
+            unitSelected = "false";
+            GenerateLocalFog(localPlayerID);
+            canvas.GetComponent<GameGUI>().HideActionInfo();
+            return;
+        }
+        foreach (Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)))
         {
             if(potentialTransport.GetLoadCapacity() != 0 && potentialTransport.GetLoadedUnits()[potentialTransport.GetLoadCapacity()-1] == null)
             {
@@ -412,18 +522,30 @@ public class SinglePlayerManager : MonoBehaviour
 
     public void ActionUnload(int x, int z, int index)
     {
-        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(x, z).ToString() + graph[0].x + graph[0].z);
-        if(movableUnit)
+        int achievablex, achievablez;
+        GameObject movableUnit = GameObject.Find(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).ToString() + graph[0].x + graph[0].z);
+        unitmap.MoveUnit(graph[0].x, graph[0].z, x, z, this, out achievablex, out achievablez);
+        if (movableUnit)
         {
-            movableUnit.transform.position = new Vector3(x * 2, 0.7f, z * 2);
-            movableUnit.name = unitmap.GetGrid().GetGridObject(x, z).ToString() + x + z;
-            unitmap.GetGrid().GetGridObject(x, z).FuelCost(Mathf.Abs(graph[0].x - x) + Mathf.Abs(graph[0].z - z));
+            movableUnit.transform.position = new Vector3(achievablex * 2, 0.7f, achievablez * 2);
+            movableUnit.name = unitmap.GetGrid().GetGridObject(achievablex, achievablez).ToString() + achievablex + achievablez;
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).FuelCost(Mathf.Abs(graph[0].x - achievablex) + Mathf.Abs(graph[0].z - achievablez));
         }
         foreach(GameObject selected in selectedTiles)
         {
             Destroy(selected);
         }
-        foreach(TileType tile in tilemap.GetNeighbouringTiles(x, z, unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[index], unitmap))
+        if (achievablex != x || achievablez != z)
+        {
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).SetIsActive(false);
+            unitmap.GetGrid().GetGridObject(achievablex, achievablez).VisualDeactivation();
+            localTurnSystem.MoveUnitAfterOrder(unitmap.GetGrid().GetGridObject(achievablex, achievablez));
+            unitSelected = "false";
+            GenerateLocalFog(localPlayerID);
+            canvas.GetComponent<GameGUI>().HideActionInfo();
+            return;
+        }
+        foreach (TileType tile in tilemap.GetNeighbouringTiles(x, z, unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[index], unitmap, fogOfWar, fogsystem))
         {
             selectedTiles.Add(Instantiate(selectedTile, new Vector3(tile.GetX() * 2, 0.1f, tile.GetZ() * 2), Quaternion.identity, map));
         }
@@ -693,7 +815,7 @@ public class SinglePlayerManager : MonoBehaviour
     //AI helper functions below this command and above Update()
     public List<DijkstraNode> getUnitMovementGraph(int localx, int localz)
     {
-        return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, false);
+        return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, false, false, fogsystem);
     }
 
     public List<DijkstraNode> getUnitMovementGraph(int localx, int localz, bool infantryCheck)
@@ -703,12 +825,12 @@ public class SinglePlayerManager : MonoBehaviour
 
     public List<DijkstraNode> getMapReachabilityGraph(int localx, int localz)
     {
-        return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, true);
+        return pathmaking.CreateReachableGraph(localx, localz, unitmap.GetGrid().GetGridObject(localx, localz), tilemap, unitmap, false, true, false, fogsystem);
     }
 
     public List<DijkstraNode> getMapReachabilityFromGoalGraph(int localx, int localz, Unit unit)
     {
-        return pathmaking.CreateReachableGraph(localx, localz, unit, tilemap, unitmap, false, true);
+        return pathmaking.CreateReachableGraph(localx, localz, unit, tilemap, unitmap, false, true, false, fogsystem);
     }
 
     public int getPotentialAttackValue(Unit attacker, Unit defender)
@@ -949,11 +1071,11 @@ public class SinglePlayerManager : MonoBehaviour
                     {
                         if(tile.gameObject.tag == "Selected" && localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z)))
                         {
-                            if((graph[0].x == x && graph[0].z == z) || unitmap.GetGrid().GetGridObject(x, z) == null)
+                            if((graph[0].x == x && graph[0].z == z) || unitmap.GetGrid().GetGridObject(x, z) == null || fogsystem.GetGrid().GetGridObject(x, z).isFogged)
                             {
-                                unitmap.MoveUnit(graph[0].x, graph[0].z, x, z);
-                                movedx = x;
-                                movedz = z;
+                                //unitmap.MoveUnit(graph[0].x, graph[0].z, x, z, this);
+                                //movedx = x;
+                                //movedz = z;
                                 bool actionmove = true;
                                 bool actionfire = false;
                                 bool actioncapture = false;
@@ -961,47 +1083,55 @@ public class SinglePlayerManager : MonoBehaviour
                                 bool actionload = false;
                                 bool[] unloadactions;
                                 bool actionupgrade = false;
-                                if(unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() == 0 && unitmap.GetGrid().GetGridObject(x, z).GetCurrentAmmo() > 0)
+                                if(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetMaxRange() == 0 && unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetCurrentAmmo() > 0)
                                 {
-                                    targetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio)), this));
+                                    targetables.Add(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z));
+                                    targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, this, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z)));
+                                    if(fogOfWar)
+                                    {
+                                        targetables.RemoveAll(enemy => fogsystem.GetGrid().GetGridObject(enemy.GetX(), enemy.GetZ()).isFogged);
+                                    }
                                     if(targetables.Count > 1) actionfire = true;
                                 }
-                                else if(graph[0].x == x && graph[0].z == z && unitmap.GetGrid().GetGridObject(x, z).GetMaxRange() > 0 && unitmap.GetGrid().GetGridObject(x, z).GetCurrentAmmo() > 0)
+                                else if(graph[0].x == x && graph[0].z == z && unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetMaxRange() > 0 && unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetCurrentAmmo() > 0)
                                 {
-                                    targetables.Add(unitmap.GetGrid().GetGridObject(x, z));
+                                    targetables.Add(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z));
                                     targetables.AddRange(unitmap.GetEnemyUnitsInRange(x, z, tilemap.GetGrid().GetGridObject(x, z).GetType().Equals(typeof(Radio)), this));
-                                    if(targetables.Count > 1) actionfire = true;
+                                    if (fogOfWar)
+                                    {
+                                        targetables.RemoveAll(enemy => fogsystem.GetGrid().GetGridObject(enemy.GetX(), enemy.GetZ()).isFogged);
+                                    }
+                                    if (targetables.Count > 1) actionfire = true;
                                 }
                                 if(tilemap.GetGrid().GetGridObject(x, z).GetType().IsSubclassOf(typeof(Building)) 
-                                && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() != unitmap.GetGrid().GetGridObject(x, z).GetTeam()
-                                && !CheckAlliance(((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam(), unitmap.GetGrid().GetGridObject(x, z).GetTeam())
-                                && unitmap.GetGrid().GetGridObject(x, z).GetMovementType() == 0)
+                                && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() != unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetTeam()
+                                && !CheckAlliance(((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam(), unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetTeam())
+                                && unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetMovementType() == 0)
                                 {
                                     actioncapture = true;
                                 }
-                                if(unitmap.GetGrid().GetGridObject(x, z).GetUnitType() == Unit.UnitType.APC && unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)).Count > 0)
+                                if(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetUnitType() == Unit.UnitType.APC && unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z)).Count > 0)
                                 {
-                                    supplyTargetables.Add(unitmap.GetGrid().GetGridObject(x, z));
-                                    supplyTargetables.AddRange(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)));
+                                    supplyTargetables.Add(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z));
+                                    supplyTargetables.AddRange(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z)));
                                     if(supplyTargetables.Count > 1) actionsupply = true;
                                 }
-                                if(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)).Count > 0)
+                                if(unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z)).Count > 0)
                                 {
-                                    foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(x, z)))
+                                    foreach(Unit potentialTransport in unitmap.GetFriendlyUnitsInRange(x, z, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z)))
                                     {
                                         if(potentialTransport.GetLoadCapacity() != 0 && potentialTransport.GetLoadedUnits()[potentialTransport.GetLoadCapacity()-1] == null)
                                         {
-                                            if(GetTransportCompatibility(potentialTransport, x, z)) actionload = true;
+                                            if(GetTransportCompatibility(potentialTransport, graph[0].x, graph[0].z)) actionload = true;
                                         }
                                     }
                                 }
-                                if(unitmap.GetGrid().GetGridObject(x, z).GetLoadCapacity() != 0)
+                                if(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetLoadCapacity() != 0)
                                 {
-                                    unloadactions = new bool[unitmap.GetGrid().GetGridObject(x, z).GetLoadCapacity()];
-                                    for(int i = 0; i < unitmap.GetGrid().GetGridObject(x, z).GetLoadCapacity(); i++)
+                                    unloadactions = new bool[unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetLoadCapacity()];
+                                    for(int i = 0; i < unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetLoadCapacity(); i++)
                                     {
-                                        if(unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[i] != null)
+                                        if(unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetLoadedUnits()[i] != null)
                                         {
                                             unloadactions[i] = true;
                                         }
@@ -1012,8 +1142,8 @@ public class SinglePlayerManager : MonoBehaviour
                                     unloadactions = new bool[0];
                                 }
                                 if(tilemap.GetGrid().GetGridObject(x, z).GetType() == typeof(Lab)
-                                && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() == unitmap.GetGrid().GetGridObject(x, z).GetTeam()
-                                && unitmap.GetGrid().GetGridObject(x, z).GetUpgradeCounter() < 3)
+                                && ((Building)tilemap.GetGrid().GetGridObject(x, z)).GetTeam() == unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetTeam()
+                                && unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z).GetUpgradeCounter() < 3)
                                 {
                                     actionupgrade = true;
                                 }
@@ -1086,6 +1216,7 @@ public class SinglePlayerManager : MonoBehaviour
                                     }
                                 }
                             }
+                            GenerateLocalFog(localPlayerID);
                         }
                     }
                 }
@@ -1116,6 +1247,7 @@ public class SinglePlayerManager : MonoBehaviour
                                     break;
                                 }
                             }
+                            GenerateLocalFog(localPlayerID);
                         }
                     }
                 }
@@ -1144,6 +1276,7 @@ public class SinglePlayerManager : MonoBehaviour
                             playersInMatch[unloaded.GetTeam()-1].AddUnit(unloaded);
                             unloaded.VisualDeactivation();
                             unloader.VisualDeactivation();
+                            GenerateLocalFog(localPlayerID);
                         }
                     }
                 }
@@ -1162,7 +1295,7 @@ public class SinglePlayerManager : MonoBehaviour
                                 Debug.Log(loadeed.ToString());
                             }
                             Debug.Log("Found unit " + unitmap.GetGrid().GetGridObject(x, z) + " on coordinates " + x + "." + z);*/
-                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, false);
+                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, false, fogOfWar, fogsystem);
                             if (graph != null)
                             {
                                 for (int i = 0; i < graph.Count; i++)
@@ -1211,7 +1344,7 @@ public class SinglePlayerManager : MonoBehaviour
                     {
                         if (unitSelected == "false")
                         {
-                            if(unitmap.GetGrid().GetGridObject(x, z) != null)
+                            if(unitmap.GetGrid().GetGridObject(x, z) != null && !(fogOfWar && fogsystem.GetGrid().GetGridObject(x, z).isFogged && unitmap.GetGrid().GetGridObject(x, z).GetTeam() != playersInMatch[localPlayerID].GetTeam()))
                             {
                                 canvas.GetComponent<GameGUI>().ShowExtendedInfo(tilemap.GetGrid().GetGridObject(x, z), tile.gameObject, unitmap.GetGrid().GetGridObject(x, z), unitmap.GetGrid().GetGridObject(x, z).GetUnitInstance());
                             }
@@ -1233,7 +1366,7 @@ public class SinglePlayerManager : MonoBehaviour
                         {
                             unitSelected = "move";
                             targetables.Clear();
-                            unitmap.MoveUnit(movedx, movedz, graph[0].x, graph[0].z);
+                            unitmap.MoveUnit(movedx, movedz, graph[0].x, graph[0].z, this, out graph[0].x, out graph[0].z);
                             canvas.GetComponent<GameGUI>().HideActionInfo();
                         }
                         else if (unitSelected == "fire" || unitSelected == "load" || unitSelected == "unload")
@@ -1247,7 +1380,7 @@ public class SinglePlayerManager : MonoBehaviour
                                 movableUnit.name = unitmap.GetGrid().GetGridObject(movementx, movementz).ToString() + graph[0].x + graph[0].z;
                                 unitmap.GetGrid().GetGridObject(movementx, movementz).FuelCost(-(Mathf.Abs(movementx - graph[0].x) + Mathf.Abs(movementz - graph[0].z)));
                             }
-                            unitmap.MoveUnit(movementx, movementz, graph[0].x, graph[0].z);
+                            unitmap.MoveUnit(movementx, movementz, graph[0].x, graph[0].z, this, out graph[0].x, out graph[0].z);
                             foreach (GameObject selected in selectedTiles)
                             {
                                 Destroy(selected);
@@ -1287,7 +1420,7 @@ public class SinglePlayerManager : MonoBehaviour
                 canvas.GetComponent<GameGUI>().ShowPlayerInfo(currentguiside, teamColours, playersInMatch[localPlayerID], turnsPassed);
                 TileType tileObject = tilemap.GetGrid().GetGridObject(x, z);
                 canvas.GetComponent<GameGUI>().ShowTileInfo(currentguiside, tileObject.GetDefence(), tileObject.GetTileVisual());
-                if(unitmap.GetGrid().GetGridObject(x, z) != null)
+                if(unitmap.GetGrid().GetGridObject(x, z) != null && !(fogOfWar && fogsystem.GetGrid().GetGridObject(x, z).isFogged && unitmap.GetGrid().GetGridObject(x, z).GetTeam() != playersInMatch[localPlayerID].GetTeam()))
                 {
                     Unit unit = unitmap.GetGrid().GetGridObject(x, z);
                     canvas.GetComponent<GameGUI>().ShowUnitInfo(currentguiside, unit.GetHealth(), unit.GetUnitInstance());
@@ -1301,7 +1434,7 @@ public class SinglePlayerManager : MonoBehaviour
             if(Input.GetKeyDown(KeyCode.Z) && unitSelected == "move" && MouseClickDetector(ref x, ref z, ref tile))
             {
                 Debug.Log("Attempting to find path from " + graph[0].x + "," + graph[0].z + " to " + x + "," + z);
-                List<PathNode> path = pathfinding.FindPath(graph[0].x, graph[0].z, x, z, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z), tilemap, unitmap);
+                List<PathNode> path = pathfinding.FindPath(graph[0].x, graph[0].z, x, z, unitmap.GetGrid().GetGridObject(graph[0].x, graph[0].z), tilemap, unitmap, true, fogsystem);
                 if(path != null)
                 {
                     Debug.Log("Path found!");

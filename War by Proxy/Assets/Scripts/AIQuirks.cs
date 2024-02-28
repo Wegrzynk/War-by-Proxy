@@ -40,7 +40,8 @@ public class AIQuirks : MonoBehaviour
     {
         int initialx = unit.GetX();
         int initialz = unit.GetZ();
-        mainManager.unitmap.MoveUnit(unit.GetX(), unit.GetZ(), bestAttackPosition.x, bestAttackPosition.z);
+        int achievablex, achievablez;
+        mainManager.unitmap.MoveUnit(unit.GetX(), unit.GetZ(), bestAttackPosition.x, bestAttackPosition.z, mainManager, out achievablex, out achievablez);
         GameObject movableUnit = GameObject.Find(unit.ToString() + initialx + initialz);
         if(movableUnit)
         {
@@ -706,7 +707,7 @@ public class AIQuirks : MonoBehaviour
         {
             if(isEnemyProductionBuilding(possibleMove.x, possibleMove.z, unit, mainManager))
             {
-                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap, false, mainManager.fogsystem);
                 foreach(PathNode node in path)
                 {
                     if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
@@ -748,7 +749,7 @@ public class AIQuirks : MonoBehaviour
             }
             if(attackFound)
             {
-                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap, false, mainManager.fogsystem);
                 foreach(PathNode node in path)
                 {
                     if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
@@ -786,7 +787,7 @@ public class AIQuirks : MonoBehaviour
             }
             if(unitsCount > 0)
             {
-                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap, false, mainManager.fogsystem);
                 foreach(PathNode node in path)
                 {
                     if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
@@ -817,7 +818,7 @@ public class AIQuirks : MonoBehaviour
         {
             if(isNonAlliedBuilding(possibleMove.x, possibleMove.z, unit, mainManager))
             {
-                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap, false, mainManager.fogsystem);
                 foreach(PathNode node in path)
                 {
                     if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
@@ -881,7 +882,7 @@ public class AIQuirks : MonoBehaviour
         {
             if(validShores.Contains(possibleMove))
             {
-                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap, false, mainManager.fogsystem);
                 foreach(PathNode node in path)
                 {
                     if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
@@ -1007,7 +1008,7 @@ public class AIQuirks : MonoBehaviour
             {
                 if(friendlyChecker.GetLoadCapacity() > 0 && friendlyChecker.GetLoadedUnits()[friendlyChecker.GetLoadCapacity() - 1] == null)
                 {
-                    path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                    path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap, false, mainManager.fogsystem);
                     foreach(PathNode node in path)
                     {
                         if(node.gCost <= unit.GetMovementDistance() && mainManager.unitmap.GetGrid().GetGridObject(node.x, node.z) == null)
@@ -1041,7 +1042,7 @@ public class AIQuirks : MonoBehaviour
         {
             if(isNonAlliedBuilding(possibleMove.x, possibleMove.z, unit, mainManager))
             {
-                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap);
+                path = mainManager.pathfinding.FindPath(unit.GetX(), unit.GetZ(), possibleMove.x, possibleMove.z, unit, mainManager.tilemap, mainManager.unitmap, true, mainManager.fogsystem);
                 if(path[path.Count-1].gCost > unit.GetMovementDistance() * 2)
                 {
                     return true;

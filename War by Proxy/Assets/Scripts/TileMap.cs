@@ -56,7 +56,7 @@ public class Tilemap
         }
     }
 
-    public List<TileType> GetNeighbouringTiles(int x, int z, Unit checker, Unitmap unitmap)
+    public List<TileType> GetNeighbouringTiles(int x, int z, Unit checker, Unitmap unitmap, bool fogofwar, FogSystem fogsystem)
     {
         int minRange = 1;
         int maxRange = 1;
@@ -69,7 +69,8 @@ public class Tilemap
             {
                 if(Mathf.Abs(i)+Mathf.Abs(j)>=minRange)
                 {
-                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetMovementPenaltyType(checker) != 0 && unitmap.GetGrid().GetGridObject(x+i, z+j) == null)
+                    if(grid.GetGridObject(x+i, z+j) != null && grid.GetGridObject(x+i, z+j).GetMovementPenaltyType(checker) != 0 
+                    && (unitmap.GetGrid().GetGridObject(x+i, z+j) == null || (fogofwar && fogsystem.GetGrid().GetGridObject(x+i,z+j).isFogged)))
                     {
                         neighbourtiles.Add(grid.GetGridObject(x+i, z+j));
                     }

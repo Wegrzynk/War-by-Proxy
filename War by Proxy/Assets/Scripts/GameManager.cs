@@ -47,6 +47,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     private string unitSelected = "false";
     private bool menuUp = false;
     private PathMaking pathmaking;
+    public FogSystem fogsystem;
     private Tilemap tilemap;
     private Unitmap unitmap;
     List<DijkstraNode> graph = new List<DijkstraNode>();
@@ -56,6 +57,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public List<Player> playersInMatch = new List<Player>();
 
     public int debugMode = 2;
+    public bool fogOfWar = true;
     private int localPlayerID;
 
     public void PrintListUnits(List<Unit> array, int x, int z, int team)
@@ -422,7 +424,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             Destroy(selected);
         }
-        foreach(TileType tile in tilemap.GetNeighbouringTiles(x, z, unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[index], unitmap))
+        foreach(TileType tile in tilemap.GetNeighbouringTiles(x, z, unitmap.GetGrid().GetGridObject(x, z).GetLoadedUnits()[index], unitmap, fogOfWar, fogsystem))
         {
             selectedTiles.Add(Instantiate(selectedTile, new Vector3(tile.GetX() * 2, 0.1f, tile.GetZ() * 2), Quaternion.identity, map));
         }
@@ -1137,7 +1139,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                         TileType tileChecker = tilemap.GetGrid().GetGridObject(x, z);
                         if(localTurnSystem.GetUnitsAwaitingOrders().Contains(unitmap.GetGrid().GetGridObject(x, z)))
                         {
-                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, false);
+                            graph = pathmaking.CreateReachableGraph(x, z, unitmap.GetGrid().GetGridObject(x, z), tilemap, unitmap, false, false, false, fogsystem);
                             if (graph != null)
                             {
                                 for (int i = 0; i < graph.Count; i++)

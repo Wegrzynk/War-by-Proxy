@@ -99,3 +99,23 @@ public class DijkstraNode: Node
         return result;
     }
 }
+
+public class FogNode : Node
+{
+    private GameGrid<FogNode> grid;
+    public bool isFogged;
+
+    public FogNode(GameGrid<FogNode> grid, int x, int z, bool isFogged)
+    {
+        this.grid = grid;
+        this.x = x;
+        this.z = z;
+        this.isFogged = isFogged;
+    }
+
+    public void SetIsFogged(bool isFogged)
+    {
+        this.isFogged = isFogged;
+        grid.TriggerGenericGridChanged(x, z);
+    }
+}

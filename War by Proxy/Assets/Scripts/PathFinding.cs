@@ -15,7 +15,7 @@ public class PathFinding
         grid = new GameGrid<PathNode>(width, height, 10f, Vector3.zero, false, (GameGrid<PathNode> g, int x, int z) => new PathNode(g, x, z));
     }
 
-    public List<PathNode> FindPath(int startX, int startZ, int endX, int endZ, Unit unit, Tilemap tilemap, Unitmap unitmap)
+    public List<PathNode> FindPath(int startX, int startZ, int endX, int endZ, Unit unit, Tilemap tilemap, Unitmap unitmap, bool ignoreBlockers , FogSystem fog)
     {
         PathNode startNode = grid.GetGridObject(startX, startZ);
         PathNode endNode = grid.GetGridObject(endX, endZ);
@@ -53,7 +53,18 @@ public class PathFinding
             foreach(PathNode neighbourNode in GetNeighbourList(currentNode))
             {
                 if(closedList.Contains(neighbourNode)) continue;
-                Unit blocker = unitmap.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z);
+                Unit blocker = null;
+                //Debug.Log("Check whole logic for" + neighbourNode.x + "," + neighbourNode.z + ":" + (!ignoreBlockers) + "," + (fog != null) + "," + (!fog.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z).isFogged));
+                if (!ignoreBlockers || !fog.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z).isFogged)
+                {
+                    //Debug.Log("Check logic for" + neighbourNode.x + "," + neighbourNode.z + ":" + (fog != null && !fog.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z).isFogged));
+                    blocker = unitmap.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z);
+                    if(blocker != null)
+                    {
+                        //Debug.Log("Found blocker unit on coordinates: " + neighbourNode.x + "," + neighbourNode.z);
+                        //Debug.Log(fog.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z).isFogged);
+                    }
+                }
                 if(tilemap.GetGrid().GetGridObject(neighbourNode.x, neighbourNode.z).GetMovementPenaltyType(unit) == 0 || (blocker != null && blocker.GetTeam() != unit.GetTeam()))
                 {
                     closedList.Add(neighbourNode);

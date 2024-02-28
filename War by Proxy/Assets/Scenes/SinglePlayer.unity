@@ -4025,13 +4025,16 @@ MonoBehaviour:
   map: {fileID: 371816336}
   canvas: {fileID: 391741062}
   selectedTile: {fileID: 6192109413423641361, guid: 8ca782ff2b37e4045812255942a3500d, type: 3}
+  fogTile: {fileID: 944949588869795667, guid: 015d8824ba6be3d42a1b2813fe030830, type: 3}
   mapButtonPrefab: {fileID: 6059908219869953856, guid: e023a02ea06213741bcfa9ab9fa32ada, type: 3}
   visibleGridPrefab: {fileID: 2424744806398279326, guid: dc1fd9dfdd34a014692626b2feb1e6b7, type: 3}
   turnIndicator: {fileID: 500964499}
   mainCamera: {fileID: 1075406199}
   turnCounter: 0
+  fogsystem: {fileID: 0}
   AI: {fileID: 1173052223}
   debugMode: 4
+  fogOfWar: 1
 --- !u!4 &371816336
 Transform:
   m_ObjectHideFlags: 0
@@ -12052,6 +12055,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainScriptHolder: {fileID: 371816334}
   minFoot: 5
+  dangerThreshold: 90
 --- !u!4 &1173052224
 Transform:
   m_ObjectHideFlags: 0
